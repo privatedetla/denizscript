@@ -10,7 +10,7 @@
 -- ════════════════════════════════════════════════════════════
 local Players  = game:GetService("Players")
 local RunSvc   = game:GetService("RunService")
-local TweenSvc = game:GetService("TweenService")
+-- TweenSvc removed
 local UIS      = game:GetService("UserInputService")
 local RepStor  = game:GetService("ReplicatedStorage")
 local Http     = game:GetService("HttpService")
@@ -48,18 +48,18 @@ end)
 -- THEME
 -- ════════════════════════════════════════════════════════════
 local T = {
-    BG      = Color3.fromRGB(8,8,14),
-    CARD    = Color3.fromRGB(16,16,26),
-    RAISED  = Color3.fromRGB(24,24,38),
-    BORDER  = Color3.fromRGB(40,40,60),
-    TEXT    = Color3.fromRGB(225,225,235),
-    MUTED   = Color3.fromRGB(120,120,140),
-    DIM     = Color3.fromRGB(60,60,80),
-    ACCENT  = Color3.fromRGB(130,90,255),
-    ON      = Color3.fromRGB(130,90,255),
-    OFF     = Color3.fromRGB(45,40,60),
-    WARN    = Color3.fromRGB(255,200,100),
-    ERR     = Color3.fromRGB(220,80,80),
+    BG      = Color3.fromRGB(0,0,0),
+    CARD    = Color3.fromRGB(0,0,0),
+    RAISED  = Color3.fromRGB(0,10,0),
+    BORDER  = Color3.fromRGB(0,60,0),
+    TEXT    = Color3.fromRGB(0,255,0),
+    MUTED   = Color3.fromRGB(0,170,0),
+    DIM     = Color3.fromRGB(0,80,0),
+    ACCENT  = Color3.fromRGB(0,255,0),
+    ON      = Color3.fromRGB(0,255,0),
+    OFF     = Color3.fromRGB(0,60,0),
+    WARN    = Color3.fromRGB(255,200,0),
+    ERR     = Color3.fromRGB(255,50,50),
 }
 
 -- ════════════════════════════════════════════════════════════
@@ -194,17 +194,15 @@ GUI.Name="SLIENT_V5"; GUI.ResetOnSpawn=false
 GUI.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
 GUI.IgnoreGuiInset=true; GUI.Parent=CoreGui
 
-local Bold = Font.new("rbxasset://fonts/families/Montserrat.json",Enum.FontWeight.Bold)
-local Semi = Font.new("rbxasset://fonts/families/Montserrat.json",Enum.FontWeight.SemiBold)
-local Reg  = Font.new("rbxasset://fonts/families/Montserrat.json",Enum.FontWeight.Regular)
+local Bold = Enum.Font.SourceSansBold
+local Semi = Enum.Font.SourceSansBold
+local Reg  = Enum.Font.SourceSans
 
 -- ════════════════════════════════════════════════════════════
 -- UI HELPERS
 -- ════════════════════════════════════════════════════════════
-local function Cnr(p,r) local c=Instance.new("UICorner",p); c.CornerRadius=UDim.new(0,r or 8); return c end
-local function Strk(p,col,thick,tr)
-    local s=Instance.new("UIStroke",p); s.Color=col or T.BORDER; s.Thickness=thick or 1; s.Transparency=tr or 0; return s
-end
+local function Cnr(p,r) return nil end
+local function Strk(p,col,thick,tr) return nil end
 local function LL(p,pad,dir)
     local l=Instance.new("UIListLayout",p); l.Padding=UDim.new(0,pad or 6)
     l.SortOrder=Enum.SortOrder.LayoutOrder
@@ -216,20 +214,11 @@ local function LP(p,l,r,t2,b)
     u.PaddingTop=UDim.new(0,t2 or 0); u.PaddingBottom=UDim.new(0,b or 0)
 end
 
-local tweenCache = {}
-local function Tw(obj,props,time,style,dir)
-    local key = tostring(obj)
-    if tweenCache[key] then tweenCache[key]:Cancel() end
-    local tw = TweenSvc:Create(obj,TweenInfo.new(time or 0.15,style or Enum.EasingStyle.Quint,dir or Enum.EasingDirection.Out),props)
-    tweenCache[key] = tw
-    tw:Play()
-    tw.Completed:Connect(function() tweenCache[key] = nil end)
-    return tw
-end
+local function Tw(obj,props,time,style,dir) end
 
 local function MkLabel(parent,p)
     local l=Instance.new("TextLabel",parent); l.BackgroundTransparency=1
-    l.FontFace=p.font or Reg; l.TextSize=p.size or 11; l.TextColor3=p.color or T.TEXT
+    l.Font=p.font or Reg; l.TextSize=p.size or 11; l.TextColor3=p.color or T.TEXT
     l.Text=p.text or ""; l.Size=p.sz or UDim2.new(1,0,0,16); l.Position=p.pos or UDim2.new(0,0,0,0)
     l.TextXAlignment=p.xa or Enum.TextXAlignment.Left; l.TextYAlignment=p.ya or Enum.TextYAlignment.Center
     l.TextWrapped=p.wrap or false; l.ZIndex=p.z or 14; return l
@@ -239,48 +228,20 @@ end
 -- NOTIFICATIONS
 -- ════════════════════════════════════════════════════════════
 local NotifHolder=Instance.new("Frame",GUI)
-NotifHolder.Size=UDim2.new(0,280,1,0); NotifHolder.Position=UDim2.new(1,-294,0,12)
-NotifHolder.BackgroundTransparency=1; NotifHolder.BorderSizePixel=0; NotifHolder.ZIndex=9000
-local _notifs={}; local NH=56; local NG=6
-
-local function _restack()
-    local y=0
-    for _,f in ipairs(_notifs) do
-        if f and f.Parent then Tw(f,{Position=UDim2.new(0,0,0,y)},0.2,Enum.EasingStyle.Back); y=y+NH+NG end
-    end
-end
+NotifHolder.Size=UDim2.new(0,320,0,0); NotifHolder.Position=UDim2.new(0,8,1,-12)
+NotifHolder.BackgroundTransparency=1; NotifHolder.BorderSizePixel=0; NotifHolder.ZIndex=9000; NotifHolder.AutomaticSize=Enum.AutomaticSize.Y
 
 local function Notif(title,body,ntype)
-    local acc=(ntype=="ok" and Color3.fromRGB(100,255,150)) or (ntype=="warn" and T.WARN) or (ntype=="err" and Color3.fromRGB(255,80,80)) or T.ACCENT
-    local icon=(ntype=="ok" and "✓") or (ntype=="warn" and "⚠") or (ntype=="err" and "✕") or "•"
-    local y=#_notifs*(NH+NG)
-    
-    local f=Instance.new("Frame",NotifHolder); f.Size=UDim2.new(1,0,0,NH); f.Position=UDim2.new(1,20,0,y)
-    f.BackgroundColor3=T.CARD; f.BackgroundTransparency=0; f.BorderSizePixel=0; f.ZIndex=9001; Cnr(f,8); Strk(f,acc,1.5,0.1)
-    
-    MkLabel(f,{text=icon.." "..title,size=11,color=T.TEXT,font=Bold,sz=UDim2.new(1,-24,0,20),pos=UDim2.new(0,12,0,8),z=9002})
-    MkLabel(f,{text=body or "",size=9,color=T.TEXT,font=Reg,sz=UDim2.new(1,-24,0,18),pos=UDim2.new(0,12,0,30),wrap=true,z=9002})
-    
-    local pb=Instance.new("Frame",f); pb.Size=UDim2.new(1,0,0,2); pb.Position=UDim2.new(0,0,1,-2)
-    pb.BackgroundColor3=T.ACCENT; pb.BackgroundTransparency=0; pb.BorderSizePixel=0
-    TweenSvc:Create(pb,TweenInfo.new(4.5,Enum.EasingStyle.Linear),{Size=UDim2.new(0,0,0,2)}):Play()
-    
-    local dismissBtn=Instance.new("TextButton",f); dismissBtn.Size=UDim2.new(0,18,0,18); dismissBtn.Position=UDim2.new(1,-22,0.5,-9)
-    dismissBtn.BackgroundTransparency=1; dismissBtn.Text="×"; dismissBtn.TextColor3=T.DIM; dismissBtn.TextSize=16; dismissBtn.TextScaled=false; dismissBtn.ZIndex=9003
-    dismissBtn.MouseEnter:Connect(function() dismissBtn.TextColor3=T.TEXT end)
-    dismissBtn.MouseLeave:Connect(function() dismissBtn.TextColor3=T.DIM end)
-    local rb=Instance.new("TextButton",f); rb.Size=UDim2.new(1,0,1,0); rb.BackgroundTransparency=1; rb.Text=""; rb.ZIndex=9003
-    insert(_notifs,f)
-    
-    Tw(f,{Position=UDim2.new(0,0,0,y)},0.35,Enum.EasingStyle.Back,Enum.EasingDirection.Out)
-    
-    local function dismiss()
-        local idx=find(_notifs,f); if idx then remove(_notifs,idx) end
-        Tw(f,{Position=UDim2.new(1,20,0,f.Position.Y.Offset),BackgroundTransparency=1},0.2)
-        task.delay(0.22,function() pcall(function() f:Destroy() end) end); task.delay(0.05,_restack)
-    end
-    dismissBtn.MouseButton1Click:Connect(dismiss); rb.MouseButton1Click:Connect(dismiss)
-    task.delay(4.8,function() if f and f.Parent then dismiss() end end)
+    local col=(ntype=="ok" and T.ACCENT) or (ntype=="warn" and T.WARN) or (ntype=="err" and T.ERR) or T.TEXT
+    local prefix=(ntype=="ok" and "[+]") or (ntype=="warn" and "[!]") or (ntype=="err" and "[-]") or "[*]"
+    local f=Instance.new("Frame",NotifHolder)
+    f.Size=UDim2.new(1,0,0,18); f.BackgroundColor3=T.BG; f.BorderSizePixel=1; f.BorderColor3=T.BORDER; f.ZIndex=9001; f.AutomaticSize=Enum.AutomaticSize.Y
+    local l=Instance.new("TextLabel",f)
+    l.Size=UDim2.new(1,-8,0,16); l.Position=UDim2.new(0,4,0,1)
+    l.Text=prefix.." "..title..(body and ": "..body or ""); l.TextColor3=col; l.TextSize=10; l.Font=Reg
+    l.TextXAlignment=Enum.TextXAlignment.Left; l.BackgroundTransparency=1; l.TextWrapped=true; l.AutomaticSize=Enum.AutomaticSize.Y; l.ZIndex=9002
+    f.Size=UDim2.new(1,0,0,l.TextBounds.Y+4)
+    task.delay(3,function() pcall(function() f:Destroy() end) end)
 end
 
 -- ════════════════════════════════════════════════════════════
@@ -312,198 +273,106 @@ end))
 -- COMPONENT FACTORIES
 -- ════════════════════════════════════════════════════════════
 local function MkCard(parent,h,order)
-    local sh=Instance.new("Frame",parent)
-    sh.Size=UDim2.new(1,0,0,h or 52); sh.BackgroundColor3=Color3.new(0,0,0); sh.BackgroundTransparency=0.6
-    sh.BorderSizePixel=0; sh.LayoutOrder=order or 0; sh.Position=UDim2.new(0,0,0,2)
-    Cnr(sh,8)
     local f=Instance.new("Frame",parent)
-    f.Size=UDim2.new(1,0,0,h or 52); f.BackgroundColor3=T.CARD
-    f.BackgroundTransparency=0; f.BorderSizePixel=0; f.LayoutOrder=order or 0; f.ClipsDescendants=true
-    Cnr(f,8); return f
+    f.Size=UDim2.new(1,0,0,h); f.BackgroundColor3=T.BG; f.BorderSizePixel=1; f.BorderColor3=T.RAISED; f.ZIndex=13
+    if order then f.LayoutOrder=order end
+    return f
 end
 
 local function MkSep(parent,text,order)
     local f=Instance.new("Frame",parent)
     f.Size=UDim2.new(1,0,0,16); f.BackgroundTransparency=1; f.LayoutOrder=order or 0
-    MkLabel(f,{text=text:upper(),size=8,color=T.DIM,font=Bold,sz=UDim2.new(1,0,1,0),z=14}); return f
+    MkLabel(f,{text="── "..(text or ""):upper().." ────",size=8,color=T.DIM,font=Reg,sz=UDim2.new(1,0,1,0),z=14}); return f
 end
 
-local function MkToggle(parent,label,order,onEn,onDis)
-    local card=MkCard(parent,52,order)
-    MkLabel(card,{text=label:upper(),size=9,color=T.TEXT,font=Semi,sz=UDim2.new(1,-68,0,18),pos=UDim2.new(0,16,0.5,-9),z=14})
-    
-    local track=Instance.new("TextButton",card)
-    track.Size=UDim2.new(0,36,0,18); track.Position=UDim2.new(1,-50,0.5,-9)
-    track.BackgroundColor3=T.RAISED; track.BackgroundTransparency=0; track.Text=""
-    track.AutoButtonColor=false; track.BorderSizePixel=0; track.ZIndex=15; Cnr(track,9)
-    
-    local thumb=Instance.new("Frame",track)
-    thumb.Size=UDim2.new(0,14,0,14); thumb.Position=UDim2.new(0,2,0.5,-7)
-    thumb.BackgroundColor3=T.MUTED; thumb.BorderSizePixel=0; thumb.ZIndex=16; Cnr(thumb,7)
-    
+local function MkToggle(parent,label,order,onEnable,onDisable)
+    local card=MkCard(parent,28,order)
     local state=false
-    local function Set(s,silent)
-        state=s
-        local dc=s and T.ACCENT or T.MUTED
-        local dp=s and UDim2.new(1,-16,0.5,-7) or UDim2.new(0,2,0.5,-7)
-        local tc=s and T.ACCENT or T.RAISED
-        
-        if silent then
-            thumb.Position=dp; thumb.BackgroundColor3=dc; track.BackgroundColor3=tc
-            track.BackgroundTransparency=s and 0.6 or 0
-        else
-            Tw(thumb,{Position=dp,BackgroundColor3=dc},0.2,Enum.EasingStyle.Quad)
-            Tw(track,{BackgroundColor3=tc,BackgroundTransparency=s and 0.6 or 0},0.15)
-        end
-    end
-    
-    track.MouseButton1Click:Connect(function()
-        local s=not state; Set(s); if s then onEn() else onDis() end
+    local cb=Instance.new("TextButton",card)
+    cb.Size=UDim2.new(1,0,1,0); cb.BackgroundTransparency=1; cb.Text=""
+    local lbl=Instance.new("TextLabel",card)
+    lbl.Size=UDim2.new(1,-16,0,14); lbl.Position=UDim2.new(0,16,0.5,-7)
+    lbl.Text="[ ] "..label; lbl.TextColor3=T.MUTED; lbl.TextSize=11; lbl.Font=Reg; lbl.TextXAlignment=Enum.TextXAlignment.Left; lbl.BackgroundTransparency=1
+    cb.MouseButton1Click:Connect(function()
+        state=not state
+        lbl.Text=state and "[X] "..label or "[ ] "..label
+        lbl.TextColor3=state and T.ACCENT or T.MUTED
+        if state then if onEnable then onEnable() end else if onDisable then onDisable() end end
     end)
-    
-    track.MouseEnter:Connect(function() Tw(track,{BackgroundTransparency=0.08},0.1) end)
-    track.MouseLeave:Connect(function() Tw(track,{BackgroundTransparency=0},0.1) end)
-    
-    return card,function() return state end,Set
+    local function setState(new,silent)
+        state=new
+        lbl.Text=state and "[X] "..label or "[ ] "..label
+        lbl.TextColor3=state and T.ACCENT or T.MUTED
+    end
+    return card,function() return state end,setState
 end
 
 local function MkSlider(parent,label,minV,maxV,defV,order,onChange)
     local d=clamp(defV or minV,minV,maxV)
-    local pct0=(maxV==minV) and 0 or (d-minV)/(maxV-minV)
-    
-    local card=MkCard(parent,62,order)
-    MkLabel(card,{text=label:upper(),size=8,color=T.DIM,font=Bold,sz=UDim2.new(1,-85,0,12),pos=UDim2.new(0,16,0,8),z=14})
-    
-    local valL=MkLabel(card,{text=tostring(d),size=14,color=T.ACCENT,font=Bold,sz=UDim2.new(0,65,0,16),pos=UDim2.new(1,-78,0,8),xa=Enum.TextXAlignment.Right,z=14})
-    
-    local track=Instance.new("Frame",card); track.Size=UDim2.new(1,-32,0,6); track.Position=UDim2.new(0,16,0,40)
-    track.BackgroundColor3=T.RAISED; track.BackgroundTransparency=0.22; track.BorderSizePixel=0; Cnr(track,3)
-    
-    local fill=Instance.new("Frame",track); fill.Size=UDim2.new(pct0,0,1,0); fill.BackgroundColor3=T.ACCENT
-    fill.BackgroundTransparency=0; fill.BorderSizePixel=0; Cnr(fill,3)
-    
-    local thumb=Instance.new("Frame",track); thumb.Size=UDim2.new(0,16,0,16); thumb.Position=UDim2.new(pct0,-8,0.5,-8)
-    thumb.BackgroundColor3=T.TEXT; thumb.BorderSizePixel=0; Cnr(thumb,8); thumb.ZIndex=15
-    
-    local glow=Strk(thumb,T.ACCENT,2,0.7)
-    
-    local dz=Instance.new("TextButton",card); dz.Size=UDim2.new(1,0,0,42); dz.Position=UDim2.new(0,0,0,20)
-    dz.BackgroundTransparency=1; dz.Text=""; dz.AutoButtonColor=false; dz.ZIndex=16
-    
-    local dragging=false; local touchX=nil
-    
-    dz.InputBegan:Connect(function(i)
-        if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
-            dragging=true; touchX=i.Position.X
-            Tw(thumb,{Size=UDim2.new(0,18,0,18)},0.12)
-            Tw(glow,{Transparency=0.3},0.12)
-        end
+    local card=MkCard(parent,36,order)
+    local lbl=MkLabel(card,{text=label..": "..tostring(d),size=10,color=T.TEXT,font=Reg,sz=UDim2.new(1,-16,0,14),pos=UDim2.new(0,12,0.5,-7),z=14})
+    local dec=Instance.new("TextButton",card)
+    dec.Size=UDim2.new(0,16,0,16); dec.Position=UDim2.new(1,-38,0.5,-8); dec.BackgroundTransparency=1; dec.Text="<"; dec.TextColor3=T.MUTED; dec.TextSize=10; dec.Font=Reg; dec.ZIndex=15; dec.BorderSizePixel=0
+    local inc=Instance.new("TextButton",card)
+    inc.Size=UDim2.new(0,16,0,16); inc.Position=UDim2.new(1,-20,0.5,-8); inc.BackgroundTransparency=1; inc.Text=">"; inc.TextColor3=T.MUTED; inc.TextSize=10; inc.Font=Reg; inc.ZIndex=15; inc.BorderSizePixel=0
+    dec.MouseButton1Click:Connect(function()
+        d=max(minV,d-1); lbl.Text=label..": "..tostring(d); if onChange then onChange(d) end
     end)
-    
-    TC(UIS.InputEnded:Connect(function(i)
-        if i.UserInputType==Enum.UserInputType.MouseButton1 or i.UserInputType==Enum.UserInputType.Touch then
-            dragging=false
-            Tw(thumb,{Size=UDim2.new(0,16,0,16)},0.12)
-            Tw(glow,{Transparency=0.7},0.12)
-        end
-    end))
-    
-    TC(UIS.InputChanged:Connect(function(i)
-        if not dragging then return end
-        if i.UserInputType==Enum.UserInputType.MouseMovement or i.UserInputType==Enum.UserInputType.Touch then
-            touchX=i.Position.X
-        end
-    end))
-    
-    TC(RunSvc.Heartbeat:Connect(function()
-        if not dragging then return end
-        local aw=track.AbsoluteSize.X; if aw<=0 then return end
-        local mx=touchX or UIS:GetMouseLocation().X
-        local p2=clamp((mx-track.AbsolutePosition.X)/aw,0,1)
-        
-        fill.Size=UDim2.new(p2,0,1,0); thumb.Position=UDim2.new(p2,-8,0.5,-8)
-        local val=floor(minV+p2*(maxV-minV)+0.5); valL.Text=tostring(val)
-        if onChange then onChange(val) end
-    end))
-    
-    local function setVal(v)
-        v=clamp(v,minV,maxV); local p2=(maxV==minV) and 0 or (v-minV)/(maxV-minV)
-        fill.Size=UDim2.new(p2,0,1,0); thumb.Position=UDim2.new(p2,-8,0.5,-8); valL.Text=tostring(v)
-    end
-    
-    return card,valL,setVal
+    inc.MouseButton1Click:Connect(function()
+        d=min(maxV,d+1); lbl.Text=label..": "..tostring(d); if onChange then onChange(d) end
+    end)
+    local function setVal(v) d=clamp(v,minV,maxV); lbl.Text=label..": "..tostring(d) end
+    return card,lbl,setVal
 end
 
 local function MkTBoxCard(parent,topLabel,ph,order,default)
-    local card=MkCard(parent,64,order)
-    MkLabel(card,{text=topLabel:upper(),size=8,color=T.DIM,font=Bold,sz=UDim2.new(1,-32,0,12),pos=UDim2.new(0,16,0,8),z=14})
-    
-    local box=Instance.new("TextBox",card); box.Size=UDim2.new(1,-32,0,30); box.Position=UDim2.new(0,16,0,24)
-    box.BackgroundColor3=T.RAISED; box.BackgroundTransparency=0.15; box.FontFace=Reg; box.TextSize=11
+    local card=MkCard(parent,52,order)
+    MkLabel(card,{text=topLabel,size=8,color=T.MUTED,font=Reg,sz=UDim2.new(1,-16,0,12),pos=UDim2.new(0,12,0,6),z=14})
+    local box=Instance.new("TextBox",card); box.Size=UDim2.new(1,-16,0,24); box.Position=UDim2.new(0,12,0,22)
+    box.BackgroundColor3=T.BG; box.BorderSizePixel=1; box.BorderColor3=T.BORDER; box.Font=Reg; box.TextSize=10
     box.TextColor3=T.TEXT; box.PlaceholderColor3=T.DIM; box.PlaceholderText=ph or ""; box.Text=default or ""
-    box.ClearTextOnFocus=false; box.BorderSizePixel=0; box.TextXAlignment=Enum.TextXAlignment.Left; box.ZIndex=15; Cnr(box,7)
-    
-    local s=Strk(box,T.BORDER,1,0.35); LP(box,10,10,0,0)
-    
-    box.Focused:Connect(function()
-        Tw(s,{Transparency=0,Color=T.ACCENT},0.15)
-        Tw(box,{BackgroundTransparency=0.05},0.15)
-    end)
-    box.FocusLost:Connect(function()
-        Tw(s,{Transparency=0.35,Color=T.BORDER},0.15)
-        Tw(box,{BackgroundTransparency=0.15},0.15)
-    end)
-    
+    box.ClearTextOnFocus=false; box.TextXAlignment=Enum.TextXAlignment.Left; box.ZIndex=15
     return card,box
 end
 
-local function MkBtn(parent,p)
-    local b=Instance.new("TextButton",parent)
-    b.BackgroundColor3=p.bg or T.ACCENT; b.BackgroundTransparency=(p.bgt or 0)+0.2
-    b.FontFace=p.font or Semi; b.TextSize=p.size or 11; b.TextColor3=p.color or Color3.fromRGB(255,255,255)
-    b.Text=p.text or ""; b.Size=p.sz or UDim2.new(1,0,0,32); b.Position=p.pos or UDim2.new(0,0,0,0)
-    b.AnchorPoint=p.anchor or Vector2.new(0,0); b.AutoButtonColor=false; b.BorderSizePixel=0
-    b.LayoutOrder=p.order or 0; b.ZIndex=p.z or 14
-    if p.corner~=false then Cnr(b,p.corner or 6) end
-    
-    b.MouseEnter:Connect(function()
-        Tw(b,{BackgroundTransparency=(p.bgt or 0)+0.05},0.12)
-    end)
-    b.MouseLeave:Connect(function()
-        Tw(b,{BackgroundTransparency=(p.bgt or 0)+0.2},0.12)
-    end)
-    
-    return b
+local function MkBtn(parent,params)
+    local sz=params.sz or UDim2.new(1,0,0,28)
+    local pos=params.pos
+    local btn=Instance.new("TextButton",parent)
+    btn.Size=sz; btn.BackgroundTransparency=1; btn.BorderSizePixel=1; btn.BorderColor3=T.BORDER
+    btn.Text="[ "..(params.text or "").." ]"; btn.TextColor3=params.color or T.TEXT; btn.TextSize=params.size or 11; btn.Font=Reg
+    btn.ZIndex=params.z or 14
+    if pos then btn.Position=pos end
+    if params.order then btn.LayoutOrder=params.order end
+    if params.anchor then btn.AnchorPoint=params.anchor end
+    btn.MouseEnter:Connect(function() btn.TextColor3=T.ACCENT; btn.BorderColor3=T.ACCENT end)
+    btn.MouseLeave:Connect(function() btn.TextColor3=params.color or T.TEXT; btn.BorderColor3=T.BORDER end)
+    return btn
 end
 
 local function MkKBRow(parent,action,order)
-    local f=Instance.new("Frame",parent); f.Size=UDim2.new(1,0,0,32)
-    f.BackgroundColor3=T.RAISED; f.BackgroundTransparency=0.18; f.BorderSizePixel=0; f.LayoutOrder=order; Cnr(f,7)
-    
-    MkLabel(f,{text=action,size=9,color=T.TEXT,font=Semi,sz=UDim2.new(1,-74,1,0),pos=UDim2.new(0,12,0,0),z=15})
-    
-    local bindBtn=MkBtn(f,{bg=T.CARD,text="—",size=8,color=T.MUTED,sz=UDim2.new(0,60,0,24),pos=UDim2.new(1,-64,0.5,-12),corner=5,bgt=0.08,z=16})
-    
+    local f=Instance.new("Frame",parent); f.Size=UDim2.new(1,0,0,28)
+    f.BackgroundColor3=T.BG; f.BorderSizePixel=1; f.BorderColor3=T.RAISED; f.LayoutOrder=order
+    MkLabel(f,{text=action,size=9,color=T.TEXT,font=Reg,sz=UDim2.new(1,-68,1,0),pos=UDim2.new(0,8,0,0),z=15})
+    local bindBtn=MkBtn(f,{text="—",size=9,color=T.MUTED,sz=UDim2.new(0,56,0,20),pos=UDim2.new(1,-60,0.5,-10),z=16})
     local function refresh()
         for _,kb in ipairs(KEYBINDS) do
             if kb.action==action then
-                bindBtn.Text=kb.key and tostring(kb.key):gsub("Enum.KeyCode.","") or "—"
+                bindBtn.Text="[ "..(kb.key and tostring(kb.key):gsub("Enum.KeyCode.","") or "—").." ]"
                 return
             end
         end
     end
     refresh()
-    
     bindBtn.MouseButton1Click:Connect(function()
-        bindBtn.Text="..."; bindBtn.TextColor3=T.ACCENT; _kbListening=true
+        bindBtn.Text="[ ... ]"; bindBtn.TextColor3=T.ACCENT; _kbListening=true
         _kbCb=function(kc)
             SAVE.keybinds[action]=tostring(kc):gsub("Enum.KeyCode.","")
             for _,kb in ipairs(KEYBINDS) do if kb.action==action then kb.key=kc; break end end
-            bindBtn.Text=tostring(kc):gsub("Enum.KeyCode.",""); bindBtn.TextColor3=T.MUTED
+            bindBtn.Text="[ "..tostring(kc):gsub("Enum.KeyCode.","").." ]"; bindBtn.TextColor3=T.MUTED
             task.delay(0.5,DoSave)
         end
     end)
-    
     return f
 end
 
@@ -514,63 +383,20 @@ local WW,WH = 760,580
 local Win = Instance.new("Frame",GUI)
 Win.Name="SLIENT_Main"; Win.Size=UDim2.new(0,WW,0,WH)
 Win.Position=UDim2.new(0.5,-WW/2,0.5,-WH/2)
-Win.BackgroundColor3=T.BG; Win.BackgroundTransparency=0.02
-Win.BorderSizePixel=0; Win.ClipsDescendants=true; Win.ZIndex=10
-Cnr(Win,16); Strk(Win,T.BORDER,1.4,0.25)
-
-local PlexusDots={}; local PlexusCanvas=Instance.new("Frame",Win)
-PlexusCanvas.Size=UDim2.new(1,0,1,0); PlexusCanvas.BackgroundTransparency=1; PlexusCanvas.ZIndex=10; PlexusCanvas.BorderSizePixel=0; Cnr(PlexusCanvas,16)
-local PLEXUS_COUNT=40
-local plexusTime=0
-for i=1,PLEXUS_COUNT do
-    local sz=2
-    local d=Instance.new("Frame",PlexusCanvas); d.Size=UDim2.new(0,sz,0,sz); d.BackgroundColor3=T.DIM; d.BackgroundTransparency=0.2; d.BorderSizePixel=0; d.ZIndex=11
-    local c=Instance.new("UICorner",d); c.CornerRadius=UDim.new(1,0)
-    local x=random(1,WW); local y=random(1,WH); local vx=(random()*2-1)*0.2; local vy=(random()*2-1)*0.2
-    d.Position=UDim2.new(0,x,0,y); insert(PlexusDots,{f=d,x=x,y=y,vx=vx,vy=vy})
-end
-getgenv().SLIENT_PlexusConn=TC(RunSvc.RenderStepped:Connect(function(dt)
-    if getgenv().SLIENT_Gen~=SLIENT_gen then return end
-    if not PlexusCanvas or not PlexusCanvas.Parent then return end
-    if _G.SLIENT_fpsBoost then PlexusCanvas.Visible=false; return else PlexusCanvas.Visible=true end
-    pcall(function()
-    plexusTime=(plexusTime or 0)+dt
-    for _,dot in ipairs(PlexusDots) do
-        if not dot.f or not dot.f.Parent then continue end
-        dot.x=(dot.x or 0)+dot.vx; dot.y=(dot.y or 0)+dot.vy
-        if dot.x<0 or dot.x>WW then dot.vx=-dot.vx; dot.x=math.clamp(dot.x,0,WW) end
-        if dot.y<0 or dot.y>WH then dot.vy=-dot.vy; dot.y=math.clamp(dot.y,0,WH) end
-        dot.f.Position=UDim2.new(0,dot.x,0,dot.y)
-    end
-    end)
-end))
+Win.BackgroundColor3=T.BG; Win.BackgroundTransparency=0
+Win.BorderSizePixel=1; Win.BorderColor3=T.BORDER; Win.ClipsDescendants=true; Win.ZIndex=10
 
 local Header=Instance.new("Frame",Win)
-Header.Size=UDim2.new(1,0,0,48); Header.BackgroundColor3=T.BG; Header.BackgroundTransparency=0.05; Header.BorderSizePixel=0; Header.ZIndex=14
+Header.Size=UDim2.new(1,0,0,40); Header.BackgroundColor3=T.BG; Header.BorderSizePixel=0; Header.ZIndex=14
 
-local logoBg=Instance.new("Frame",Header); logoBg.Size=UDim2.new(0,32,0,32); logoBg.Position=UDim2.new(0,10,0.5,-16)
-logoBg.BackgroundColor3=T.ACCENT; logoBg.BackgroundTransparency=0.8; logoBg.BorderSizePixel=0; Cnr(logoBg,16)
-MkLabel(logoBg,{text="S",size=14,color=T.TEXT,font=Bold,sz=UDim2.new(1,0,1,0),xa=Enum.TextXAlignment.Center,z=14})
-
-local TitleLbl=MkLabel(Header,{text="SLIENT",size=14,color=T.TEXT,font=Bold,sz=UDim2.new(0,80,0,18),pos=UDim2.new(0,48,0,8),z=14})
-local VersionLbl=MkLabel(Header,{text="v1.4.2",size=9,color=T.MUTED,font=Reg,sz=UDim2.new(0,80,0,14),pos=UDim2.new(0,48,0,26),z=14})
-
-local pulseDot=Instance.new("Frame",Header); pulseDot.Size=UDim2.new(0,6,0,6); pulseDot.Position=UDim2.new(1,-18,0,6)
-pulseDot.BackgroundColor3=T.ACCENT; pulseDot.BackgroundTransparency=0; pulseDot.BorderSizePixel=0; Cnr(pulseDot,3)
-
-local pulseTime=0
-TC(RunSvc.RenderStepped:Connect(function(dt)
-    pulseTime=(pulseTime+dt)%1
-    pulseDot.BackgroundTransparency=0.3+math.sin(pulseTime*math.pi*2)*0.4
-end))
+MkLabel(Header,{text="SLIENT v1.4.2",size=13,color=T.ACCENT,font=Reg,sz=UDim2.new(0,160,0,16),pos=UDim2.new(0,10,0,4),z=14})
+MkLabel(Header,{text="[system ready]",size=8,color=T.MUTED,font=Reg,sz=UDim2.new(0,160,0,12),pos=UDim2.new(0,10,0,22),z=14})
+local verLbl=MkLabel(Header,{text="v1.4.2",size=8,color=T.MUTED,font=Reg,sz=UDim2.new(0,40,0,12),pos=UDim2.new(1,-50,0,24),z=14,xa=Enum.TextXAlignment.Right})
 
 local CloseBtn=Instance.new("TextButton",Header)
-CloseBtn.Size=UDim2.new(0,24,0,24); CloseBtn.Position=UDim2.new(1,-34,0.5,-12)
-CloseBtn.BackgroundColor3=T.RAISED; CloseBtn.BackgroundTransparency=0; CloseBtn.Text="×"
-CloseBtn.FontFace=Bold; CloseBtn.TextSize=14; CloseBtn.TextColor3=T.MUTED
-CloseBtn.AutoButtonColor=false; CloseBtn.BorderSizePixel=0; CloseBtn.ZIndex=15; Cnr(CloseBtn,12)
-CloseBtn.MouseEnter:Connect(function() Tw(CloseBtn,{BackgroundColor3=T.ERR,TextColor3=T.TEXT},0.14) end)
-CloseBtn.MouseLeave:Connect(function() Tw(CloseBtn,{BackgroundColor3=T.RAISED,TextColor3=T.MUTED},0.14) end)
+CloseBtn.Size=UDim2.new(0,20,0,18); CloseBtn.Position=UDim2.new(1,-24,0.5,-9)
+CloseBtn.BackgroundTransparency=1; CloseBtn.Text="x"; CloseBtn.Font=Reg; CloseBtn.TextSize=12; CloseBtn.TextColor3=T.ERR
+CloseBtn.AutoButtonColor=false; CloseBtn.BorderSizePixel=0; CloseBtn.ZIndex=15
 CloseBtn.MouseButton1Click:Connect(function() Win.Visible=false end)
 
 do
@@ -594,14 +420,13 @@ end
 -- ════════════════════════════════════════════════════════════
 -- SIDEBAR + CONTENT
 -- ════════════════════════════════════════════════════════════
-local BODY_Y=48; local SIDE_W=130
+local BODY_Y=40; local SIDE_W=120
 
 local Sidebar=Instance.new("ScrollingFrame",Win)
 Sidebar.Size=UDim2.new(0,SIDE_W,0,WH-BODY_Y); Sidebar.Position=UDim2.new(0,0,0,BODY_Y)
-Sidebar.BackgroundColor3=T.RAISED; Sidebar.BackgroundTransparency=0.7; Sidebar.BorderSizePixel=0; Sidebar.ScrollBarThickness=3
+Sidebar.BackgroundColor3=T.BG; Sidebar.BackgroundTransparency=0; Sidebar.BorderSizePixel=0; Sidebar.ScrollBarThickness=2
 Sidebar.ScrollBarImageColor3=T.DIM; Sidebar.AutomaticCanvasSize=Enum.AutomaticSize.Y
 Sidebar.CanvasSize=UDim2.new(0,0,0,0); Sidebar.ZIndex=14; Sidebar.ClipsDescendants=true
-LP(Sidebar,6,6,6,6); LL(Sidebar,2)
 
 local Content=Instance.new("Frame",Win)
 Content.Size=UDim2.new(0,WW-SIDE_W,0,WH-BODY_Y); Content.Position=UDim2.new(0,SIDE_W,0,BODY_Y)
@@ -611,78 +436,53 @@ Content.BackgroundTransparency=1; Content.BorderSizePixel=0; Content.ClipsDescen
 -- TABS
 -- ════════════════════════════════════════════════════════════
 local TABS={
-    {n="Home",     i="◈"},
-    {n="Combat",   i="◉"},
-    {n="Style",    i="✦"},
-    {n="Move",     i="▲"},
-    {n="Targets",  i="◎"},
-    {n="Ghost",    i="○"},
-    {n="Glitch",   i="⚡"},
-    {n="Headless", i="◐"},
-    {n="Spin",     i="⟳"},
-    {n="Settings", i="◇"},
-    {n="Configs",  i="▣"},
-    {n="Cbt Adv",  i="⊕"},
-    {n="Cbt Util", i="⊡"},
-    {n="Advantage",i="◆"},
+    {n="Home"},
+    {n="Combat"},
+    {n="Style"},
+    {n="Move"},
+    {n="Targets"},
+    {n="Ghost"},
+    {n="Glitch"},
+    {n="Headless"},
+    {n="Spin"},
+    {n="Settings"},
+    {n="Configs"},
+    {n="Cbt Adv"},
+    {n="Cbt Util"},
+    {n="Advantage"},
 }
 
-local tabBtns={}; local tabPanels={}; local activeTab=nil; local transiting=false
+local tabBtns={}; local tabPanels={}; local activeTab=nil
 
 for i,t in ipairs(TABS) do
     local btn=Instance.new("TextButton",Sidebar)
-    btn.Size=UDim2.new(1,0,0,34); btn.BackgroundTransparency=1
-    btn.Text=""; btn.AutoButtonColor=false; btn.BorderSizePixel=0; btn.LayoutOrder=i; btn.ZIndex=15; Cnr(btn,6)
-    
-    local bar=Instance.new("Frame",btn); bar.Size=UDim2.new(0,2,0,20); bar.Position=UDim2.new(0,0,0.5,-10)
-    bar.BackgroundColor3=T.ACCENT; bar.BackgroundTransparency=1; bar.BorderSizePixel=0; Cnr(bar,1)
-    
-    local ic=Instance.new("TextLabel",btn); ic.Size=UDim2.new(0,20,1,0); ic.Position=UDim2.new(0,10,0,0)
-    ic.BackgroundTransparency=1; ic.Text=t.i; ic.TextSize=9; ic.TextColor3=T.DIM; ic.FontFace=Bold
-    ic.TextXAlignment=Enum.TextXAlignment.Center; ic.ZIndex=15
-    
-    local nl=Instance.new("TextLabel",btn); nl.Size=UDim2.new(1,-34,1,0); nl.Position=UDim2.new(0,34,0,0)
-    nl.BackgroundTransparency=1; nl.Text=t.n:upper(); nl.TextSize=7; nl.TextColor3=T.MUTED; nl.FontFace=Bold
-    nl.TextXAlignment=Enum.TextXAlignment.Left; nl.ZIndex=15
+    btn.Size=UDim2.new(1,0,0,28); btn.BackgroundTransparency=1
+    btn.Text="  "..t.n; btn.TextColor3=T.MUTED; btn.TextSize=10; btn.Font=Reg
+    btn.AutoButtonColor=false; btn.BorderSizePixel=0; btn.LayoutOrder=i; btn.ZIndex=15
+    btn.TextXAlignment=Enum.TextXAlignment.Left
     
     local panel=Instance.new("ScrollingFrame",Content)
-    panel.Size=UDim2.new(1,0,1,0); panel.Position=UDim2.new(1,0,0,0); panel.BackgroundTransparency=1
-    panel.BorderSizePixel=0; panel.ScrollBarThickness=4; panel.ScrollBarImageColor3=T.ACCENT
+    panel.Size=UDim2.new(1,0,1,0); panel.BackgroundTransparency=1
+    panel.BorderSizePixel=0; panel.ScrollBarThickness=2; panel.ScrollBarImageColor3=T.DIM
     panel.AutomaticCanvasSize=Enum.AutomaticSize.Y; panel.CanvasSize=UDim2.new(0,0,0,0)
     panel.ClipsDescendants=true; panel.Visible=false; panel.ZIndex=12
-    LP(panel,14,14,12,24); LL(panel,8)
+    LP(panel,8,8,8,16); LL(panel,6)
     
-    btn.MouseEnter:Connect(function() if activeTab~=i then Tw(btn,{BackgroundColor3=T.RAISED,BackgroundTransparency=0.5},0.12) end end)
-    btn.MouseLeave:Connect(function() if activeTab~=i then Tw(btn,{BackgroundTransparency=1},0.12) end end)
-    
-    tabBtns[i]={btn=btn,bar=bar,ic=ic,nl=nl}; tabPanels[i]=panel
+    tabBtns[i]={btn=btn}; tabPanels[i]=panel
 end
 
 local function GoTab(idx)
-    if activeTab==idx or transiting then return end
-    transiting=true; local prev=activeTab; activeTab=idx
-    
+    if activeTab==idx then return end
+    local prev=activeTab; activeTab=idx
     for i,tb in ipairs(tabBtns) do
-        local a=(i==idx)
-        Tw(tb.btn,{BackgroundColor3=a and T.ACCENT or T.RAISED,BackgroundTransparency=a and 0.85 or 1},0.16)
-        Tw(tb.nl,{TextColor3=a and T.TEXT or T.MUTED},0.16)
-        Tw(tb.ic,{TextColor3=a and T.ACCENT or T.DIM},0.16)
-        Tw(tb.bar,{BackgroundTransparency=a and 0 or 1},0.2)
+        if i==idx then
+            tb.btn.Text="> "..TABS[i].n; tb.btn.TextColor3=T.ACCENT
+        else
+            tb.btn.Text="  "..TABS[i].n; tb.btn.TextColor3=T.MUTED
+        end
     end
-    
-    local dir=(prev and idx>prev) and 1 or -1
-    local np=tabPanels[idx]; local op=prev and tabPanels[prev]
-    
-    np.Position=UDim2.new(dir,0,0,0); np.Visible=true
-    
-    local ti=TweenInfo.new(0.2,Enum.EasingStyle.Quint,Enum.EasingDirection.Out)
-    if op then TweenSvc:Create(op,ti,{Position=UDim2.new(-dir,0,0,0)}):Play() end
-    local t2=TweenSvc:Create(np,ti,{Position=UDim2.new(0,0,0,0)}); t2:Play()
-    
-    t2.Completed:Connect(function()
-        if op then op.Visible=false; op.Position=UDim2.new(1,0,0,0) end
-        transiting=false
-    end)
+    if prev then tabPanels[prev].Visible=false end
+    tabPanels[idx].Visible=true
 end
 
 for i in ipairs(tabBtns) do
@@ -694,19 +494,12 @@ end
 -- TOGGLE BUTTON
 -- ════════════════════════════════════════════════════════════
 local TBtn=Instance.new("TextButton",GUI)
-TBtn.Name="SLIENT_Toggle"; TBtn.Size=UDim2.fromOffset(52,52)
-TBtn.BackgroundColor3=T.BG; TBtn.BackgroundTransparency=0.02
-TBtn.Text="S"; TBtn.FontFace=Bold; TBtn.TextSize=18; TBtn.TextColor3=T.ACCENT
-TBtn.AutoButtonColor=false; TBtn.BorderSizePixel=0; TBtn.ZIndex=200
-Cnr(TBtn,12); Strk(TBtn,T.ACCENT,1.8,0.2)
+TBtn.Name="SLIENT_Toggle"; TBtn.Size=UDim2.fromOffset(32,20)
+TBtn.BackgroundColor3=T.BG; TBtn.BackgroundTransparency=0
+TBtn.Text="[ S ]"; TBtn.Font=Reg; TBtn.TextSize=10; TBtn.TextColor3=T.ACCENT
+TBtn.AutoButtonColor=false; TBtn.BorderSizePixel=1; TBtn.BorderColor3=T.BORDER; TBtn.ZIndex=200
 
-task.defer(function() local gs=GUI.AbsoluteSize; TBtn.Position=UDim2.fromOffset(gs.X-64,12) end)
-
-local toggleHue=0
-TC(RunSvc.RenderStepped:Connect(function(dt)
-    toggleHue=(toggleHue+dt*0.4)%1
-    TBtn.TextColor3=Color3.fromHSV(toggleHue,0.9,1)
-end))
+task.defer(function() local gs=GUI.AbsoluteSize; TBtn.Position=UDim2.fromOffset(gs.X-42,6) end)
 
 local _toggleKey=Enum.KeyCode.Insert
 do
@@ -1895,11 +1688,11 @@ do
         local key=modeKeys[i]
         local row=mRows[math.ceil(i/3)]
         local active=(key==rpMode)
-        local b=MkBtn(row,{text=lbl,size=7,bg=active and T.ACCENT or T.RAISED,color=active and T.BG or T.TEXT,sz=UDim2.new(0.33,-3,1,0),corner=5,bgt=0,order=i,z=15})
+        local b=MkBtn(row,{text=lbl,size=7,color=active and T.ACCENT or T.MUTED,sz=UDim2.new(0.33,-3,1,0),order=i,z=15})
         b.MouseButton1Click:Connect(function()
             rpMode=key
-            for _,bt in ipairs(mBtns) do Tw(bt.b,{BackgroundColor3=T.RAISED,TextColor3=T.TEXT},0.14) end
-            Tw(b,{BackgroundColor3=T.ACCENT,TextColor3=T.BG},0.14)
+            for _,bt in ipairs(mBtns) do bt.b.TextColor3=T.MUTED; bt.b.BorderColor3=T.BORDER end
+            b.TextColor3=T.ACCENT; b.BorderColor3=T.ACCENT
             if rpOn then startRP() end
         end)
         insert(mBtns,{b=b,k=key})
@@ -1925,19 +1718,15 @@ do
     end)
     
     local phCard=MkCard(P,106,7)
-    MkLabel(phCard,{text="PHRASES (one per line)",size=7,color=T.DIM,font=Bold,sz=UDim2.new(1,-28,0,10),pos=UDim2.new(0,14,0,7),z=14})
+    MkLabel(phCard,{text="PHRASES (one per line)",size=8,color=T.MUTED,font=Reg,sz=UDim2.new(1,-28,0,12),pos=UDim2.new(0,12,0,7),z=14})
     local phBox=Instance.new("TextBox",phCard)
     phBox.Size=UDim2.new(1,-28,0,78); phBox.Position=UDim2.new(0,14,0,22)
-    phBox.BackgroundColor3=T.RAISED; phBox.BackgroundTransparency=0.2
-    phBox.FontFace=Reg; phBox.TextSize=9; phBox.TextColor3=T.TEXT
+    phBox.BackgroundColor3=T.BG; phBox.BorderSizePixel=1; phBox.BorderColor3=T.BORDER; phBox.Font=Reg; phBox.TextSize=9; phBox.TextColor3=T.TEXT
     phBox.PlaceholderColor3=T.DIM; phBox.PlaceholderText="One phrase per line..."
-    phBox.Text=SAVE.phrases; phBox.ClearTextOnFocus=false; phBox.BorderSizePixel=0
+    phBox.Text=SAVE.phrases; phBox.ClearTextOnFocus=false
     phBox.TextXAlignment=Enum.TextXAlignment.Left; phBox.TextYAlignment=Enum.TextYAlignment.Top
-    phBox.MultiLine=true; phBox.ZIndex=15; Cnr(phBox,6); LP(phBox,6,6,4,4)
-    local phS=Strk(phBox,T.BORDER,1,0.4)
-    phBox.Focused:Connect(function() Tw(phS,{Transparency=0,Color=T.ACCENT},0.14) end)
+    phBox.MultiLine=true; phBox.ZIndex=15; LP(phBox,4,4,4,4)
     phBox.FocusLost:Connect(function()
-        Tw(phS,{Transparency=0.4,Color=T.BORDER},0.14)
         SAVE.phrases=phBox.Text; parseUserPhrases(SAVE.phrases); task.delay(.5,DoSave)
     end)
 end
@@ -2205,24 +1994,16 @@ do
     local gfOn=false; local gfConn; local gfSet; local glitchR=4; local gtBox
     
     do
-        local card=MkCard(P,52,1)
-        MkLabel(card,{text="GLITCH",size=9,color=T.TEXT,font=Semi,sz=UDim2.new(1,-68,0,18),pos=UDim2.new(0,16,0.5,-9),z=14})
-        
+        local card=MkCard(P,28,1)
+        local glbl=Instance.new("TextLabel",card)
+        glbl.Size=UDim2.new(1,-16,0,14); glbl.Position=UDim2.new(0,16,0.5,-7)
+        glbl.Text="[ ] GLITCH"; glbl.TextColor3=T.MUTED; glbl.TextSize=11; glbl.Font=Reg; glbl.TextXAlignment=Enum.TextXAlignment.Left; glbl.BackgroundTransparency=1
         local track=Instance.new("TextButton",card)
-        track.Size=UDim2.new(0,42,0,20); track.Position=UDim2.new(1,-54,0.5,-10)
-        track.BackgroundColor3=T.RAISED; track.BackgroundTransparency=0.1; track.Text=""
-        track.AutoButtonColor=false; track.BorderSizePixel=0; track.ZIndex=15; Cnr(track,11); Strk(track,T.BORDER,1,0.4)
-        
-        local thumb=Instance.new("Frame",track)
-        thumb.Size=UDim2.new(0,14,0,14); thumb.Position=UDim2.new(0,3,0.5,-7)
-        thumb.BackgroundColor3=T.OFF; thumb.BorderSizePixel=0; thumb.ZIndex=16; Cnr(thumb,9)
+        track.Size=UDim2.new(1,0,1,0); track.BackgroundTransparency=1; track.Text=""; track.ZIndex=15
         
         gfSet=function(s)
-            Tw(thumb,{
-                Position=s and UDim2.new(1,-17,0.5,-7) or UDim2.new(0,3,0.5,-7),
-                BackgroundColor3=s and T.ON or T.OFF
-            },0.25,Enum.EasingStyle.Back)
-            Tw(track,{BackgroundColor3=s and Color3.fromRGB(35,45,55) or T.RAISED},0.18)
+            glbl.Text=s and "[X] GLITCH" or "[ ] GLITCH"
+            glbl.TextColor3=s and T.ACCENT or T.MUTED
         end
         
         track.MouseButton1Click:Connect(function()
@@ -2368,14 +2149,10 @@ do
     local _,fbGet,fbSet=MkToggle(fbCard,"DISABLE EFFECTS",0,
         function()
             _G.SLIENT_fpsBoost=true
-            if PlexusCanvas then PlexusCanvas.Visible=false end
-            if pulseDot then pulseDot.Visible=false end
             Notif("FPS Boost","Effects disabled","ok")
         end,
         function()
             _G.SLIENT_fpsBoost=false
-            if PlexusCanvas then PlexusCanvas.Visible=true end
-            if pulseDot then pulseDot.Visible=true end
             Notif("FPS Boost","Effects enabled","")
         end)
     
@@ -2428,7 +2205,7 @@ do
     local btnRow=Instance.new("Frame",btnCard); btnRow.Size=UDim2.new(1,-28,0,26); btnRow.Position=UDim2.new(0,14,0,8)
     btnRow.BackgroundTransparency=1; LL(btnRow,6,Enum.FillDirection.Horizontal)
     local saveBtn=MkBtn(btnRow,{bg=T.RAISED,text="SAVE",size=10,color=T.TEXT,sz=UDim2.new(0.32,-4,1,0),corner=6,bgt=0.08,order=1,z=15})
-    local loadBtn=MkBtn(btnRow,{bg=T.ACCENT,text="LOAD",size=10,color=T.BG,sz=UDim2.new(0.32,-4,1,0),corner=6,bgt=0,order=2,z=15})
+    local loadBtn=MkBtn(btnRow,{text="LOAD",size=10,color=T.ACCENT,sz=UDim2.new(0.32,-4,1,0),order=2,z=15})
     local delBtn=MkBtn(btnRow,{bg=T.ERR,text="DEL",size=10,color=T.TEXT,sz=UDim2.new(0.32,-4,1,0),corner=6,bgt=0.12,order=3,z=15})
     local listCard=MkCard(P,180,3)
     MkLabel(listCard,{text="SAVED CONFIGS",size=7,color=T.DIM,font=Bold,sz=UDim2.new(1,-28,0,10),pos=UDim2.new(0,14,0,7),z=14})
@@ -2441,9 +2218,9 @@ do
         local n=0
         for name,_ in pairs(configs) do n=n+1
             local row=Instance.new("Frame",listSF); row.Size=UDim2.new(1,0,0,28)
-            row.BackgroundColor3=T.RAISED; row.BackgroundTransparency=0.2; row.BorderSizePixel=0; Cnr(row,6)
-            MkLabel(row,{text=name,size=9,color=T.TEXT,font=Semi,sz=UDim2.new(1,-50,1,0),pos=UDim2.new(0,10,0,0),z=15})
-            local lb=MkBtn(row,{bg=T.ACCENT,text="LOAD",size=7,color=T.BG,sz=UDim2.new(0,42,0,20),pos=UDim2.new(1,-45,0.5,-10),corner=4,bgt=0,z=15})
+            row.BackgroundColor3=T.BG; row.BackgroundTransparency=0; row.BorderSizePixel=1; row.BorderColor3=T.RAISED
+            MkLabel(row,{text=name,size=9,color=T.TEXT,font=Reg,sz=UDim2.new(1,-50,1,0),pos=UDim2.new(0,10,0,0),z=15})
+            local lb=MkBtn(row,{text="LOAD",size=8,color=T.ACCENT,sz=UDim2.new(0,42,0,20),pos=UDim2.new(1,-45,0.5,-10),z=15})
             lb.MouseButton1Click:Connect(function()
                 local cfg=configs[name]; if not cfg then return end
                 for k,v in pairs(cfg) do SAVE[k]=v end
@@ -2927,7 +2704,7 @@ do
                 local lbl=Instance.new("TextLabel",bg)
                 lbl.Size=UDim2.new(1,0,1,0); lbl.BackgroundTransparency=1; lbl.Text="👑 OWNER 👑"
                 lbl.TextColor3=Color3.fromRGB(255,215,0); lbl.TextStrokeColor3=Color3.fromRGB(255,170,0)
-                lbl.TextStrokeTransparency=0; lbl.Font=Enum.Font.GothamBold; lbl.TextScaled=true
+                lbl.TextStrokeTransparency=0; lbl.Font=Bold; lbl.TextScaled=true
                 lbl.TextXAlignment=Enum.TextXAlignment.Center; lbl.TextYAlignment=Enum.TextYAlignment.Center
             end
             if p.Character then apply(p.Character) end
@@ -2957,30 +2734,25 @@ do
         end)
         if ok and ver and ver~=SCRIPT_VERSION then
             task.wait(0.5)
-            Win.BackgroundColor3=Color3.fromRGB(0,0,0); Win.BackgroundTransparency=0
+            Win.BackgroundColor3=T.BG; Win.BackgroundTransparency=0
             local overlay=Instance.new("Frame",Win)
             overlay.Size=UDim2.new(1,0,1,0); overlay.Position=UDim2.new(0,0,0,0)
-            overlay.BackgroundColor3=Color3.fromRGB(0,0,0); overlay.BackgroundTransparency=0
+            overlay.BackgroundColor3=T.BG; overlay.BackgroundTransparency=0
             overlay.ZIndex=999; overlay.BorderSizePixel=0
-            local icon=Instance.new("TextLabel",overlay)
-            icon.Size=UDim2.new(0,80,0,80); icon.Position=UDim2.new(0.5,-40,0.06,0); icon.BackgroundTransparency=1
-            icon.Text="⚠️"; icon.TextColor3=T.WARN; icon.TextScaled=true; icon.Font=Enum.Font.GothamBold; icon.ZIndex=1000
             local title=Instance.new("TextLabel",overlay)
-            title.Size=UDim2.new(1,0,0,50); title.Position=UDim2.new(0,0,0.18,0); title.BackgroundTransparency=1
-            title.Text="UPDATE DETECTED"; title.TextColor3=T.WARN; title.TextScaled=true; title.Font=Enum.Font.GothamBold; title.ZIndex=1000
-            local ts=Instance.new("UIStroke",title); ts.Thickness=2; ts.Color=Color3.fromRGB(0,0,0); ts.Transparency=0.6
+            title.Size=UDim2.new(1,0,0,30); title.Position=UDim2.new(0,0,0.2,0); title.BackgroundTransparency=1
+            title.Text="[ UPDATE DETECTED ]"; title.TextColor3=T.WARN; title.TextSize=14; title.Font=Reg; title.ZIndex=1000
             local verLbl=Instance.new("TextLabel",overlay)
-            verLbl.Size=UDim2.new(1,0,0,30); verLbl.Position=UDim2.new(0,0,0.27,0); verLbl.BackgroundTransparency=1
-            verLbl.Text=SCRIPT_VERSION.."  ➜  "..ver; verLbl.TextColor3=T.MUTED; verLbl.TextScaled=true; verLbl.Font=Enum.Font.Gotham; verLbl.ZIndex=1000
+            verLbl.Size=UDim2.new(1,0,0,20); verLbl.Position=UDim2.new(0,0,0.27,0); verLbl.BackgroundTransparency=1
+            verLbl.Text=SCRIPT_VERSION.." -> "..ver; verLbl.TextColor3=T.MUTED; verLbl.TextSize=10; verLbl.Font=Reg; verLbl.ZIndex=1000
             local btn=Instance.new("TextButton",overlay)
-            btn.Size=UDim2.new(0,260,0,55); btn.Position=UDim2.new(0.5,-130,0.35,0)
-            btn.BackgroundColor3=Color3.fromRGB(33,150,243); btn.Text="UPDATE NOW"; btn.TextColor3=Color3.fromRGB(255,255,255); btn.TextScaled=true
-            btn.Font=Enum.Font.GothamBold; btn.ZIndex=1000; btn.BorderSizePixel=0; btn.AutoButtonColor=false
-            pcall(function() local c=Instance.new("UICorner",btn); c.CornerRadius=UDim2.new(0,10,0,10) end)
-            btn.MouseEnter:Connect(function() pcall(function() game:GetService("TweenService"):Create(btn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(60,190,255)}):Play() end) end)
-            btn.MouseLeave:Connect(function() pcall(function() game:GetService("TweenService"):Create(btn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(33,150,243)}):Play() end) end)
+            btn.Size=UDim2.new(0,200,0,30); btn.Position=UDim2.new(0.5,-100,0.35,0)
+            btn.BackgroundTransparency=1; btn.BorderSizePixel=1; btn.BorderColor3=T.BORDER
+            btn.Text="[ UPDATE NOW ]"; btn.TextColor3=T.ACCENT; btn.TextSize=10; btn.Font=Reg; btn.ZIndex=1000
+            btn.MouseEnter:Connect(function() btn.TextColor3=T.WARN; btn.BorderColor3=T.WARN end)
+            btn.MouseLeave:Connect(function() btn.TextColor3=T.ACCENT; btn.BorderColor3=T.BORDER end)
             btn.MouseButton1Click:Connect(function()
-                btn.Text="REJOINING..."; btn.BackgroundColor3=Color3.fromRGB(200,80,80)
+                btn.Text="[ REJOINING... ]"; btn.TextColor3=T.MUTED
                 Notif("Update","Rejoining to apply update","ok")
                 local code='loadstring(game:HttpGet("'..UPDATE_LOADSTR..'"))()'
                 local q=queueonteleport or queue_on_teleport or syn and syn.queue_on_teleport
@@ -2988,9 +2760,6 @@ do
                 task.wait(0.5)
                 pcall(function() game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,game.JobId,lp) end)
             end)
-            local infoLbl=Instance.new("TextLabel",overlay)
-            infoLbl.Size=UDim2.new(1,0,0,16); infoLbl.Position=UDim2.new(0,0,0.47,0); infoLbl.BackgroundTransparency=1
-            infoLbl.Text="Click UPDATE to rejoin and auto-load the new version"; infoLbl.TextColor3=Color3.fromRGB(140,140,140); infoLbl.TextSize=14; infoLbl.Font=Enum.Font.Gotham; infoLbl.ZIndex=1000
         end
     end)
 end
