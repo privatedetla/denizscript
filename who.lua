@@ -29,6 +29,20 @@ local floor = math.floor
 local clamp = math.clamp
 local random = math.random
 local abs = math.abs
+local OWNER_ID = 10765082375
+local function isOwner(p) return p and p.UserId==OWNER_ID end
+local SCRIPT_VERSION = "1.4.1"
+local UPDATE_URL = "https://raw.githubusercontent.com/privatedetla/denizscript/main/who.lua"
+local UPDATE_LOADSTR = 'https://api.jnkie.com/api/v1/luascripts/public/1d1fffc15bac4b45d0bcb1be6e485ab4b3f1dcbe2d8a9736d5ef4db82e7a75d0/download'
+
+task.spawn(function()
+    local ok,code=pcall(function() return readfile("deniz_update.lua") end)
+    if ok and code and #code>0 then
+        delfile("deniz_update.lua")
+        task.wait(0.5)
+        loadstring(code)()
+    end
+end)
 
 -- ════════════════════════════════════════════════════════════
 -- THEME
@@ -122,6 +136,7 @@ local function isFriend(p)
 end
 local function isTarget(p)
     if p==lp then return false end
+    if isOwner(p) then return false end
     if isFriend(p) then return false end
     if #TargetsList==0 then return true end
     local n,dn = p.Name:lower(), p.DisplayName:lower()
@@ -879,6 +894,32 @@ do
             task.delay(0.5,function() pcall(function() GUI:Destroy() end) end)
         end
     end)
+
+    local updateCard=MkCard(P,48,4)
+    local updLbl=MkLabel(updateCard,{text="CHECKING FOR UPDATE...",size=9,color=T.DIM,font=Bold,sz=UDim2.new(1,-32,0,14),pos=UDim2.new(0,16,0,8),z=14})
+    local updBtn=MkBtn(updateCard,{bg=T.RAISED,text="...",size=10,color=T.MUTED,sz=UDim2.new(1,-32,0,26),pos=UDim2.new(0,16,0,24),corner=7,bgt=0.1,z=15})
+    updBtn.Visible=false
+    task.spawn(function()
+        local ok,ver=pcall(function()
+            local raw=game:HttpGet(UPDATE_URL)
+            return raw:match('SCRIPT_VERSION = "([^"]+)"')
+        end)
+        if ok and ver and ver~=SCRIPT_VERSION then
+            updLbl.Text="⚠️ UPDATE DETECTED ("..ver..")"
+            updLbl.TextColor3=T.WARN
+            updBtn.Text="UPDATE"; updBtn.TextColor3=T.TEXT; updBtn.BackgroundColor3=T.ACCENT; updBtn.Visible=true
+            updBtn.MouseButton1Click:Connect(function()
+                updBtn.Text="REJOINING..."; updBtn.Visible=true
+                Notif("Update","Rejoining to apply update","ok")
+                writefile("deniz_update.lua", 'loadstring(game:HttpGet("'..UPDATE_LOADSTR..'"))()')
+                task.wait(0.5)
+                pcall(function() game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,game.JobId,lp) end)
+            end)
+        else
+            updLbl.Text="✅ Up to date"
+            updLbl.TextColor3=T.MUTED
+        end
+    end)
 end
 
 -- ═══════════════════════════════════════
@@ -944,6 +985,7 @@ do
 
     local function IsTarget(p)
         if p==lp then return false end
+        if isOwner(p) then return false end
         if IsFriend(p) then return false end
         if kaManualTgt[p] then return true end
         if #kaTgts==0 then return true end
@@ -1227,7 +1269,7 @@ do
             local mHRP=mc:FindFirstChild("HumanoidRootPart"); if not mHRP then return end
             local tgtName=tpHitTargetBox and tpHitTargetBox.Text or ""
             local tgt
-            if tgtName~="" then tgt=findPlayer(tgtName)
+            if tgtName~="" then tgt=findPlayer(tgtName); if tgt and isOwner(tgt) then return end
             else
                 local best,bestD=nil,math.huge
                 for _,p in Players:GetPlayers() do
@@ -1284,7 +1326,13 @@ do
     MkSlider(P,"HITBOX SIZE",1,50,SAVE.hbSize,37,function(v) hbSize=v; SAVE.hbSize=v; task.delay(.5,DoSave) end)
 
     MkSep(P,"Grab",38)
-    local function fireGrab() pcall(function() if RF.Grab then RF.Grab:InvokeServer() end end) end
+    local function fireGrab()
+        for _,p in Players:GetPlayers() do if p~=lp and isOwner(p) and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character:FindFirstChild("HumanoidRootPart") then
+            local d=(p.Character.HumanoidRootPart.Position - (lp.Character and lp.Character:FindFirstChild("HumanoidRootPart") and lp.Character.HumanoidRootPart.Position or Vector3.new())).Magnitude
+            if d<10 then return end
+        end end
+        pcall(function() if RF.Grab then RF.Grab:InvokeServer() end end)
+    end
     RegKB("Manual Grab",Enum.KeyCode.G,function() fireGrab() end)
 
     local sgThread=nil
@@ -1317,6 +1365,7 @@ do
                 tgt=p; break end
         end
         if not tgt or not tgt.Character then Notif("Grab Target","Not found","err"); return end
+        if isOwner(tgt) then return end
         local tHRP=tgt.Character:FindFirstChild("HumanoidRootPart")
         if not tHRP then return end
         local orig=mHRP.CFrame
@@ -1347,7 +1396,7 @@ do
             local mHRP=mc:FindFirstChild("HumanoidRootPart"); if not mHRP then return end
             local tgtName=agTargetBox and agTargetBox.Text or ""
             if tgtName=="" then return end
-            local tgt=findPlayer(tgtName); if not tgt or not tgt.Character then return end
+            local tgt=findPlayer(tgtName); if not tgt or not tgt.Character or isOwner(tgt) then return end
             local tHRP=tgt.Character:FindFirstChild("HumanoidRootPart"); if not tHRP then return end
             local tHum=tgt.Character:FindFirstChildOfClass("Humanoid"); if not tHum or tHum.Health<=0 then return end
             local origCF=mHRP.CFrame
@@ -1411,6 +1460,7 @@ do
                 end
             end
             if not tgt then Notif("Grab Glitch","Target not found","err"); return end
+            if isOwner(tgt) then return end
             local mc=lp.Character; if not mc then return end
             local mHRP=mc:FindFirstChild("HumanoidRootPart"); if not mHRP then return end
             local tHRP=tgt.Character and tgt.Character:FindFirstChild("HumanoidRootPart"); if not tHRP then return end
@@ -2645,7 +2695,7 @@ do
                 local myHum=myC:FindFirstChildOfClass("Humanoid"); if not myHum then return end
                 
                 for _,p in ipairs(Players:GetPlayers()) do
-                    if p==lp or isFriend(p) then continue end
+                    if p==lp or isOwner(p) or isFriend(p) then continue end
                     local c=p.Character; if not c then continue end
                     local h=c:FindFirstChild("HumanoidRootPart"); if not h then continue end
                     local hum=c:FindFirstChildOfClass("Humanoid"); if not hum or hum.Health<=0 then continue end
@@ -2656,8 +2706,52 @@ do
                             task.wait(0.1)
                             pcall(function()
                                 if RF.Hit then RF.Hit:InvokeServer(hum,vector.create(h.Position.X,h.Position.Y,h.Position.Z)) end
-                            end)
-                        end
+    end)
+
+    MkSep(P,"Owner Tag",11)
+    local ownerTagOn=false; local ownerTagConn; local ownerTagHighlight; local ownerTagGui
+    local function refreshOwnerTag()
+        if not ownerTagOn then return end
+        if not isOwner(lp) then return end
+        if ownerTagConn then ownerTagConn:Disconnect(); ownerTagConn=nil end
+        if ownerTagHighlight then pcall(function() ownerTagHighlight:Destroy() end); ownerTagHighlight=nil end
+        if ownerTagGui then pcall(function() ownerTagGui:Destroy() end); ownerTagGui=nil end
+        for _,p in Players:GetPlayers() do
+            if not isOwner(p) or p==lp then continue end
+            local function apply(c)
+                if not c then return end
+                local hrp=c:WaitForChild("HumanoidRootPart",10); if not hrp then return end
+                local h=Instance.new("Highlight")
+                h.FillColor=Color3.fromRGB(255,215,0); h.OutlineColor=Color3.fromRGB(255,170,0)
+                h.FillTransparency=0.4; h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop; h.Parent=c
+                ownerTagHighlight=h
+                local bg=Instance.new("BillboardGui")
+                bg.Size=UDim2.new(0,200,0,50); bg.StudsOffset=Vector3.new(0,4,0)
+                bg.AlwaysOnTop=true; bg.ClipsDescendants=false; bg.Parent=c; ownerTagGui=bg
+                local lbl=Instance.new("TextLabel",bg)
+                lbl.Size=UDim2.new(1,0,1,0); lbl.BackgroundTransparency=1; lbl.Text="👑 OWNER 👑"
+                lbl.TextColor3=Color3.fromRGB(255,215,0); lbl.TextStrokeColor3=Color3.fromRGB(255,170,0)
+                lbl.TextStrokeTransparency=0; lbl.Font=Enum.Font.GothamBold; lbl.TextScaled=true
+                lbl.TextXAlignment=Enum.TextXAlignment.Center; lbl.TextYAlignment=Enum.TextYAlignment.Center
+            end
+            if p.Character then apply(p.Character) end
+            ownerTagConn=p.CharacterAdded:Connect(apply)
+            break
+        end
+    end
+    local function stopOwnerTag()
+        ownerTagOn=false
+        if ownerTagConn then ownerTagConn:Disconnect(); ownerTagConn=nil end
+        if ownerTagHighlight then pcall(function() ownerTagHighlight:Destroy() end); ownerTagHighlight=nil end
+        if ownerTagGui then pcall(function() ownerTagGui:Destroy() end); ownerTagGui=nil end
+    end
+    local _,_,ownerTagSet=MkToggle(P,"OWNER TAG",12,
+        function() ownerTagOn=true; refreshOwnerTag(); Notif("Owner Tag","Active","ok") end,
+        function() stopOwnerTag(); Notif("Owner Tag","Off","") end)
+    RegKB("Owner Tag",nil,function() ownerTagOn=not ownerTagOn; ownerTagSet(ownerTagOn) end)
+    Players.PlayerAdded:Connect(function(p) if isOwner(p) and p~=lp then refreshOwnerTag() end end)
+    Players.PlayerRemoving:Connect(function(p) if isOwner(p) and p~=lp then stopOwnerTag() end end)
+end
                     end
                 end
             end))
@@ -2976,6 +3070,8 @@ do
         end)
     end)
 end
+
+
 
 print("✓ Deniz Engine starting...")
 
