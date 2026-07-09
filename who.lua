@@ -1,7 +1,7 @@
 --[[
   ╔═══════════════════════════════════════════════════════════╗
-  ║                    DENIZ ENGINE V5                        ║
-  ║                Made with love by Deniz                    ║
+  ║                    SLIENT V5                              ║
+  ║                                                           ║
   ╚═══════════════════════════════════════════════════════════╝
 ]]
 
@@ -18,7 +18,7 @@ local CoreGui  = game:GetService("CoreGui")
 local lp       = Players.LocalPlayer
 
 math.randomseed(tick())
-getgenv().DENIZ_Gen=(getgenv().DENIZ_Gen or 0)+1; local DENIZ_gen=getgenv().DENIZ_Gen
+getgenv().SLIENT_Gen=(getgenv().SLIENT_Gen or 0)+1; local SLIENT_gen=getgenv().SLIENT_Gen
 local clock = os.clock
 local wait = task.wait
 local spawn = task.spawn
@@ -36,9 +36,9 @@ local UPDATE_URL = "https://raw.githubusercontent.com/privatedetla/denizscript/m
 local UPDATE_LOADSTR = 'https://api.jnkie.com/api/v1/luascripts/public/1d1fffc15bac4b45d0bcb1be6e485ab4b3f1dcbe2d8a9736d5ef4db82e7a75d0/download'
 
 task.spawn(function()
-    local ok,code=pcall(function() return readfile("deniz_update.lua") end)
+    local ok,code=pcall(function() return readfile("slient_update.lua") end)
     if ok and code and #code>0 then
-        delfile("deniz_update.lua")
+        delfile("slient_update.lua")
         task.wait(0.5)
         loadstring(code)()
     end
@@ -48,25 +48,25 @@ end)
 -- THEME
 -- ════════════════════════════════════════════════════════════
 local T = {
-    BG      = Color3.fromRGB(14,14,18),
-    CARD    = Color3.fromRGB(28,28,34),
-    RAISED  = Color3.fromRGB(38,38,46),
-    BORDER  = Color3.fromRGB(55,55,66),
-    TEXT    = Color3.fromRGB(242,242,242),
-    MUTED   = Color3.fromRGB(138,138,148),
-    DIM     = Color3.fromRGB(68,68,80),
-    ACCENT  = Color3.fromRGB(33,150,243),
-    ON      = Color3.fromRGB(66,165,245),
-    OFF     = Color3.fromRGB(50,50,60),
-    WARN    = Color3.fromRGB(200,185,120),
-    ERR     = Color3.fromRGB(200,80,80),
+    BG      = Color3.fromRGB(8,8,14),
+    CARD    = Color3.fromRGB(16,16,26),
+    RAISED  = Color3.fromRGB(24,24,38),
+    BORDER  = Color3.fromRGB(40,40,60),
+    TEXT    = Color3.fromRGB(225,225,235),
+    MUTED   = Color3.fromRGB(120,120,140),
+    DIM     = Color3.fromRGB(60,60,80),
+    ACCENT  = Color3.fromRGB(130,90,255),
+    ON      = Color3.fromRGB(130,90,255),
+    OFF     = Color3.fromRGB(45,40,60),
+    WARN    = Color3.fromRGB(255,200,100),
+    ERR     = Color3.fromRGB(220,80,80),
 }
 
 -- ════════════════════════════════════════════════════════════
 -- SAVE
 -- ════════════════════════════════════════════════════════════
 local SAVE = {}
-local SAVE_FILE = "deniz_v1.json"
+local SAVE_FILE = "slient_v1.json"
 pcall(function()
     if readfile then
         local ok,d = pcall(function() return Http:JSONDecode(readfile(SAVE_FILE)) end)
@@ -106,7 +106,7 @@ SAVE.safeZ        = SAVE.safeZ        or 0
 SAVE.flySpeed     = SAVE.flySpeed     or 80
 SAVE.tpHitTarget  = SAVE.tpHitTarget  or ""
 SAVE.tpHitRange   = SAVE.tpHitRange   or 35
-SAVE.phrases      = SAVE.phrases      or "DENIZ ON TOP!"
+SAVE.phrases      = SAVE.phrases      or "SLIENT ON TOP!"
 SAVE.bioTypeSpeed = SAVE.bioTypeSpeed or 15
 SAVE.nameTypewriter = SAVE.nameTypewriter or false
 SAVE.kaPredict    = SAVE.kaPredict    or true
@@ -188,9 +188,9 @@ end)
 -- ════════════════════════════════════════════════════════════
 -- GUI
 -- ════════════════════════════════════════════════════════════
-pcall(function() local o=CoreGui:FindFirstChild("DENIZ_V5"); if o then o:Destroy() end end)
+pcall(function() local o=CoreGui:FindFirstChild("SLIENT_V5"); if o then o:Destroy() end end)
 local GUI = Instance.new("ScreenGui")
-GUI.Name="DENIZ_V5"; GUI.ResetOnSpawn=false
+GUI.Name="SLIENT_V5"; GUI.ResetOnSpawn=false
 GUI.ZIndexBehavior=Enum.ZIndexBehavior.Sibling
 GUI.IgnoreGuiInset=true; GUI.Parent=CoreGui
 
@@ -239,9 +239,9 @@ end
 -- NOTIFICATIONS
 -- ════════════════════════════════════════════════════════════
 local NotifHolder=Instance.new("Frame",GUI)
-NotifHolder.Size=UDim2.new(0,290,1,0); NotifHolder.Position=UDim2.new(1,-304,0,12)
+NotifHolder.Size=UDim2.new(0,280,1,0); NotifHolder.Position=UDim2.new(1,-294,0,12)
 NotifHolder.BackgroundTransparency=1; NotifHolder.BorderSizePixel=0; NotifHolder.ZIndex=9000
-local _notifs={}; local NH=62; local NG=6
+local _notifs={}; local NH=56; local NG=6
 
 local function _restack()
     local y=0
@@ -256,26 +256,19 @@ local function Notif(title,body,ntype)
     local y=#_notifs*(NH+NG)
     
     local f=Instance.new("Frame",NotifHolder); f.Size=UDim2.new(1,0,0,NH); f.Position=UDim2.new(1,20,0,y)
-    f.BackgroundColor3=T.CARD; f.BackgroundTransparency=0.04; f.BorderSizePixel=0; f.ZIndex=9001; Cnr(f,10); Strk(f,acc,2,0.15)
+    f.BackgroundColor3=T.CARD; f.BackgroundTransparency=0; f.BorderSizePixel=0; f.ZIndex=9001; Cnr(f,8); Strk(f,acc,1.5,0.1)
     
-    local glowBg=Instance.new("Frame",f); glowBg.Size=UDim2.new(1,0,1,0); glowBg.BackgroundColor3=acc; glowBg.BackgroundTransparency=0.92; glowBg.BorderSizePixel=0; glowBg.ZIndex=9001; Cnr(glowBg,10)
+    MkLabel(f,{text=icon.." "..title,size=11,color=T.TEXT,font=Bold,sz=UDim2.new(1,-24,0,20),pos=UDim2.new(0,12,0,8),z=9002})
+    MkLabel(f,{text=body or "",size=9,color=T.TEXT,font=Reg,sz=UDim2.new(1,-24,0,18),pos=UDim2.new(0,12,0,30),wrap=true,z=9002})
     
-    local acbar=Instance.new("Frame",f); acbar.Size=UDim2.new(0,4,0,40); acbar.Position=UDim2.new(0,0,0.5,-20)
-    acbar.BackgroundColor3=acc; acbar.BorderSizePixel=0; Cnr(acbar,2)
-    
-    local iconBg=Instance.new("Frame",f); iconBg.Size=UDim2.new(0,28,0,28); iconBg.Position=UDim2.new(0,10,0.5,-14)
-    iconBg.BackgroundColor3=acc; iconBg.BackgroundTransparency=0.85; iconBg.BorderSizePixel=0; Cnr(iconBg,7)
-    
-    MkLabel(f,{text=icon,size=15,color=acc,font=Bold,sz=UDim2.new(0,28,1,0),pos=UDim2.new(0,10,0,0),xa=Enum.TextXAlignment.Center,z=9002})
-    MkLabel(f,{text=title,size=11,color=T.TEXT,font=Bold,sz=UDim2.new(1,-42,0,18),pos=UDim2.new(0,40,0,10),z=9002})
-    MkLabel(f,{text=body or "",size=9,color=T.MUTED,font=Reg,sz=UDim2.new(1,-42,0,20),pos=UDim2.new(0,40,0,32),wrap=true,z=9002})
-    
-    local pb=Instance.new("Frame",f); pb.Size=UDim2.new(1,0,0,3); pb.Position=UDim2.new(0,0,1,-3)
-    pb.BackgroundColor3=acc; pb.BackgroundTransparency=0.25; pb.BorderSizePixel=0
-    TweenSvc:Create(pb,TweenInfo.new(4.5,Enum.EasingStyle.Linear),{Size=UDim2.new(0,0,0,3)}):Play()
+    local pb=Instance.new("Frame",f); pb.Size=UDim2.new(1,0,0,2); pb.Position=UDim2.new(0,0,1,-2)
+    pb.BackgroundColor3=T.ACCENT; pb.BackgroundTransparency=0; pb.BorderSizePixel=0
+    TweenSvc:Create(pb,TweenInfo.new(4.5,Enum.EasingStyle.Linear),{Size=UDim2.new(0,0,0,2)}):Play()
     
     local dismissBtn=Instance.new("TextButton",f); dismissBtn.Size=UDim2.new(0,18,0,18); dismissBtn.Position=UDim2.new(1,-22,0.5,-9)
-    dismissBtn.BackgroundTransparency=1; dismissBtn.Text="×"; dismissBtn.TextColor3=T.MUTED; dismissBtn.TextSize=16; dismissBtn.TextScaled=false; dismissBtn.ZIndex=9003
+    dismissBtn.BackgroundTransparency=1; dismissBtn.Text="×"; dismissBtn.TextColor3=T.DIM; dismissBtn.TextSize=16; dismissBtn.TextScaled=false; dismissBtn.ZIndex=9003
+    dismissBtn.MouseEnter:Connect(function() dismissBtn.TextColor3=T.TEXT end)
+    dismissBtn.MouseLeave:Connect(function() dismissBtn.TextColor3=T.DIM end)
     local rb=Instance.new("TextButton",f); rb.Size=UDim2.new(1,0,1,0); rb.BackgroundTransparency=1; rb.Text=""; rb.ZIndex=9003
     insert(_notifs,f)
     
@@ -319,10 +312,14 @@ end))
 -- COMPONENT FACTORIES
 -- ════════════════════════════════════════════════════════════
 local function MkCard(parent,h,order)
+    local sh=Instance.new("Frame",parent)
+    sh.Size=UDim2.new(1,0,0,h or 52); sh.BackgroundColor3=Color3.new(0,0,0); sh.BackgroundTransparency=0.6
+    sh.BorderSizePixel=0; sh.LayoutOrder=order or 0; sh.Position=UDim2.new(0,0,0,2)
+    Cnr(sh,8)
     local f=Instance.new("Frame",parent)
     f.Size=UDim2.new(1,0,0,h or 52); f.BackgroundColor3=T.CARD
-    f.BackgroundTransparency=0.06; f.BorderSizePixel=0; f.LayoutOrder=order or 0; f.ClipsDescendants=true
-    Cnr(f,10); Strk(f,T.BORDER,1,0.45); return f
+    f.BackgroundTransparency=0; f.BorderSizePixel=0; f.LayoutOrder=order or 0; f.ClipsDescendants=true
+    Cnr(f,8); return f
 end
 
 local function MkSep(parent,text,order)
@@ -336,31 +333,27 @@ local function MkToggle(parent,label,order,onEn,onDis)
     MkLabel(card,{text=label:upper(),size=9,color=T.TEXT,font=Semi,sz=UDim2.new(1,-68,0,18),pos=UDim2.new(0,16,0.5,-9),z=14})
     
     local track=Instance.new("TextButton",card)
-    track.Size=UDim2.new(0,42,0,20); track.Position=UDim2.new(1,-54,0.5,-10)
-    track.BackgroundColor3=T.RAISED; track.BackgroundTransparency=0.1; track.Text=""
-    track.AutoButtonColor=false; track.BorderSizePixel=0; track.ZIndex=15; Cnr(track,11); Strk(track,T.BORDER,1,0.4)
-    
-    local glow=Instance.new("Frame",card); glow.Size=UDim2.new(0,50,0,28); glow.Position=UDim2.new(1,-58,0.5,-14)
-    glow.BackgroundColor3=T.ON; glow.BackgroundTransparency=1; glow.BorderSizePixel=0; glow.ZIndex=14; Cnr(glow,14)
+    track.Size=UDim2.new(0,36,0,18); track.Position=UDim2.new(1,-50,0.5,-9)
+    track.BackgroundColor3=T.RAISED; track.BackgroundTransparency=0; track.Text=""
+    track.AutoButtonColor=false; track.BorderSizePixel=0; track.ZIndex=15; Cnr(track,9)
     
     local thumb=Instance.new("Frame",track)
-    thumb.Size=UDim2.new(0,14,0,14); thumb.Position=UDim2.new(0,3,0.5,-7)
-    thumb.BackgroundColor3=T.OFF; thumb.BorderSizePixel=0; thumb.ZIndex=16; Cnr(thumb,9)
+    thumb.Size=UDim2.new(0,14,0,14); thumb.Position=UDim2.new(0,2,0.5,-7)
+    thumb.BackgroundColor3=T.MUTED; thumb.BorderSizePixel=0; thumb.ZIndex=16; Cnr(thumb,7)
     
     local state=false
     local function Set(s,silent)
         state=s
-        local dc=s and T.ON or T.OFF
-        local dp=s and UDim2.new(1,-17,0.5,-7) or UDim2.new(0,3,0.5,-7)
-        local tc=s and Color3.fromRGB(35,45,55) or T.RAISED
+        local dc=s and T.ACCENT or T.MUTED
+        local dp=s and UDim2.new(1,-16,0.5,-7) or UDim2.new(0,2,0.5,-7)
+        local tc=s and T.ACCENT or T.RAISED
         
         if silent then
             thumb.Position=dp; thumb.BackgroundColor3=dc; track.BackgroundColor3=tc
-            glow.BackgroundTransparency=s and 0.85 or 1
+            track.BackgroundTransparency=s and 0.6 or 0
         else
-            Tw(thumb,{Position=dp,BackgroundColor3=dc},0.25,Enum.EasingStyle.Back)
-            Tw(track,{BackgroundColor3=tc},0.18)
-            Tw(glow,{BackgroundTransparency=s and 0.85 or 1},0.2)
+            Tw(thumb,{Position=dp,BackgroundColor3=dc},0.2,Enum.EasingStyle.Quad)
+            Tw(track,{BackgroundColor3=tc,BackgroundTransparency=s and 0.6 or 0},0.15)
         end
     end
     
@@ -368,8 +361,8 @@ local function MkToggle(parent,label,order,onEn,onDis)
         local s=not state; Set(s); if s then onEn() else onDis() end
     end)
     
-    track.MouseEnter:Connect(function() Tw(track,{BackgroundTransparency=0.05},0.1) end)
-    track.MouseLeave:Connect(function() Tw(track,{BackgroundTransparency=0.1},0.1) end)
+    track.MouseEnter:Connect(function() Tw(track,{BackgroundTransparency=0.08},0.1) end)
+    track.MouseLeave:Connect(function() Tw(track,{BackgroundTransparency=0},0.1) end)
     
     return card,function() return state end,Set
 end
@@ -466,24 +459,18 @@ end
 
 local function MkBtn(parent,p)
     local b=Instance.new("TextButton",parent)
-    b.BackgroundColor3=p.bg or T.CARD; b.BackgroundTransparency=p.bgt or 0
-    b.FontFace=p.font or Semi; b.TextSize=p.size or 11; b.TextColor3=p.color or T.TEXT
+    b.BackgroundColor3=p.bg or T.ACCENT; b.BackgroundTransparency=(p.bgt or 0)+0.2
+    b.FontFace=p.font or Semi; b.TextSize=p.size or 11; b.TextColor3=p.color or Color3.fromRGB(255,255,255)
     b.Text=p.text or ""; b.Size=p.sz or UDim2.new(1,0,0,32); b.Position=p.pos or UDim2.new(0,0,0,0)
     b.AnchorPoint=p.anchor or Vector2.new(0,0); b.AutoButtonColor=false; b.BorderSizePixel=0
     b.LayoutOrder=p.order or 0; b.ZIndex=p.z or 14
-    if p.corner~=false then Cnr(b,p.corner or 8) end
-    
-    local bg=Instance.new("Frame",b); bg.Size=UDim2.new(1,0,1,0); bg.BackgroundColor3=p.color or T.ACCENT
-    bg.BackgroundTransparency=1; bg.BorderSizePixel=0; bg.ZIndex=p.z or 14
-    if p.corner~=false then Cnr(bg,p.corner or 8) end
+    if p.corner~=false then Cnr(b,p.corner or 6) end
     
     b.MouseEnter:Connect(function()
-        Tw(b,{BackgroundTransparency=math.max(0,(p.bgt or 0)-0.15)},0.12)
-        Tw(bg,{BackgroundTransparency=0.85},0.12)
+        Tw(b,{BackgroundTransparency=(p.bgt or 0)+0.05},0.12)
     end)
     b.MouseLeave:Connect(function()
-        Tw(b,{BackgroundTransparency=p.bgt or 0},0.12)
-        Tw(bg,{BackgroundTransparency=1},0.12)
+        Tw(b,{BackgroundTransparency=(p.bgt or 0)+0.2},0.12)
     end)
     
     return b
@@ -525,7 +512,7 @@ end
 -- ════════════════════════════════════════════════════════════
 local WW,WH = 760,580
 local Win = Instance.new("Frame",GUI)
-Win.Name="DENIZ_Main"; Win.Size=UDim2.new(0,WW,0,WH)
+Win.Name="SLIENT_Main"; Win.Size=UDim2.new(0,WW,0,WH)
 Win.Position=UDim2.new(0.5,-WW/2,0.5,-WH/2)
 Win.BackgroundColor3=T.BG; Win.BackgroundTransparency=0.02
 Win.BorderSizePixel=0; Win.ClipsDescendants=true; Win.ZIndex=10
@@ -533,136 +520,58 @@ Cnr(Win,16); Strk(Win,T.BORDER,1.4,0.25)
 
 local PlexusDots={}; local PlexusCanvas=Instance.new("Frame",Win)
 PlexusCanvas.Size=UDim2.new(1,0,1,0); PlexusCanvas.BackgroundTransparency=1; PlexusCanvas.ZIndex=10; PlexusCanvas.BorderSizePixel=0; Cnr(PlexusCanvas,16)
-local PLEXUS_COUNT=80; local PLEXUS_CONNECT_DIST=220
-local PlexusLinePool={}
+local PLEXUS_COUNT=40
 local plexusTime=0
 for i=1,PLEXUS_COUNT do
-    local sz=i%5==0 and 5 or 3; local baseSz=sz
-    local d=Instance.new("Frame",PlexusCanvas); d.Size=UDim2.new(0,sz,0,sz); d.BackgroundColor3=T.ACCENT; d.BackgroundTransparency=0.4; d.BorderSizePixel=0; d.ZIndex=11
+    local sz=2
+    local d=Instance.new("Frame",PlexusCanvas); d.Size=UDim2.new(0,sz,0,sz); d.BackgroundColor3=T.DIM; d.BackgroundTransparency=0.2; d.BorderSizePixel=0; d.ZIndex=11
     local c=Instance.new("UICorner",d); c.CornerRadius=UDim.new(1,0)
-    local x=random(1,WW); local y=random(53,WH); local vx=(random()*2-1)*0.6; local vy=(random()*2-1)*0.6
-    local phase=random()*math.pi*2; local pulseSpeed=0.5+random()*1.5; local pulseAmp=1+random()*1.5
-    d.Position=UDim2.new(0,x,0,y); insert(PlexusDots,{f=d,x=x,y=y,vx=vx,vy=vy,sz=baseSz,phase=phase,pulseSpeed=pulseSpeed,pulseAmp=pulseAmp})
+    local x=random(1,WW); local y=random(1,WH); local vx=(random()*2-1)*0.2; local vy=(random()*2-1)*0.2
+    d.Position=UDim2.new(0,x,0,y); insert(PlexusDots,{f=d,x=x,y=y,vx=vx,vy=vy})
 end
-for i=1,PLEXUS_COUNT*3 do
-    local l=Instance.new("Frame",PlexusCanvas); l.Size=UDim2.new(0,1,0,1); l.BackgroundColor3=T.ACCENT; l.BackgroundTransparency=0.7; l.BorderSizePixel=0; l.ZIndex=11
-    l.Visible=false; insert(PlexusLinePool,l)
-end
-local lineIdx=0
-getgenv().DENIZ_PlexusConn=TC(RunSvc.RenderStepped:Connect(function(dt)
-    if getgenv().DENIZ_Gen~=DENIZ_gen then return end
+getgenv().SLIENT_PlexusConn=TC(RunSvc.RenderStepped:Connect(function(dt)
+    if getgenv().SLIENT_Gen~=SLIENT_gen then return end
     if not PlexusCanvas or not PlexusCanvas.Parent then return end
-    if _G.DENIZ_fpsBoost then PlexusCanvas.Visible=false; return else PlexusCanvas.Visible=true end
+    if _G.SLIENT_fpsBoost then PlexusCanvas.Visible=false; return else PlexusCanvas.Visible=true end
     pcall(function()
     plexusTime=(plexusTime or 0)+dt
-    local hueShift=(plexusTime*0.02)%1
-    local accent=T.ACCENT; local hueAccent=Color3.fromHSV((hueShift+0.55)%1,0.7,1)
     for _,dot in ipairs(PlexusDots) do
         if not dot.f or not dot.f.Parent then continue end
         dot.x=(dot.x or 0)+dot.vx; dot.y=(dot.y or 0)+dot.vy
         if dot.x<0 or dot.x>WW then dot.vx=-dot.vx; dot.x=math.clamp(dot.x,0,WW) end
-        if dot.y<53 or dot.y>WH then dot.vy=-dot.vy; dot.y=math.clamp(dot.y,53,WH) end
+        if dot.y<0 or dot.y>WH then dot.vy=-dot.vy; dot.y=math.clamp(dot.y,0,WH) end
         dot.f.Position=UDim2.new(0,dot.x,0,dot.y)
-        local pulse=(math.sin(plexusTime*(dot.pulseSpeed or 1)+(dot.phase or 0))+1)*0.5*(dot.pulseAmp or 1)+1
-        local sz=math.clamp((dot.sz or 3)*pulse,1.5,8)
-        dot.f.Size=UDim2.new(0,sz,0,sz)
-        local nearEdge=(dot.x or 0)<30 or (dot.x or 0)>(WW or 760)-30 or (dot.y or 0)<70 or (dot.y or 0)>(WH or 580)-30
-        dot.f.BackgroundColor3=nearEdge and accent or hueAccent
     end
-    lineIdx=0
-    for i=1,#PlexusDots do
-        for j=i+1,#PlexusDots do
-            local a,b=PlexusDots[i],PlexusDots[j]
-            local dx=(a.x or 0)-(b.x or 0); local dy=(a.y or 0)-(b.y or 0); local dist=math.sqrt(dx*dx+dy*dy)
-            if dist<PLEXUS_CONNECT_DIST then
-                lineIdx+=1; local l=PlexusLinePool[lineIdx] or PlexusLinePool[#PlexusLinePool]
-                if l then
-                    l.Visible=true; local ang=math.atan2(dy,dx)
-                    l.Size=UDim2.new(0,dist,0,1); l.Position=UDim2.new(0,(a.x+b.x)/2-dist/2,0,(a.y+b.y)/2)
-                    l.Rotation=math.deg(ang)
-                    local alpha=math.max(0.2,1-dist/PLEXUS_CONNECT_DIST)
-                    l.BackgroundTransparency=1-alpha*0.7
-                    l.BackgroundColor3=(lineIdx%5==0) and hueAccent or T.ACCENT
-                end
-            end
-        end
-    end
-    for idx=lineIdx+1,#PlexusLinePool do PlexusLinePool[idx].Visible=false end
     end)
 end))
 
 local Header=Instance.new("Frame",Win)
-Header.Size=UDim2.new(1,0,0,52); Header.BackgroundTransparency=1; Header.BorderSizePixel=0; Header.ZIndex=14
+Header.Size=UDim2.new(1,0,0,48); Header.BackgroundColor3=T.BG; Header.BackgroundTransparency=0.05; Header.BorderSizePixel=0; Header.ZIndex=14
 
-local logoGlow=Instance.new("Frame",Header); logoGlow.Size=UDim2.new(0,44,0,44); logoGlow.Position=UDim2.new(0,10,0.5,-22)
-logoGlow.BackgroundColor3=T.ACCENT; logoGlow.BackgroundTransparency=0.75; logoGlow.BorderSizePixel=0; Cnr(logoGlow,12)
-local lgBlur=Instance.new("BlurEffect",logoGlow); lgBlur.Size=16
+local logoBg=Instance.new("Frame",Header); logoBg.Size=UDim2.new(0,32,0,32); logoBg.Position=UDim2.new(0,10,0.5,-16)
+logoBg.BackgroundColor3=T.ACCENT; logoBg.BackgroundTransparency=0.8; logoBg.BorderSizePixel=0; Cnr(logoBg,16)
+MkLabel(logoBg,{text="S",size=14,color=T.TEXT,font=Bold,sz=UDim2.new(1,0,1,0),xa=Enum.TextXAlignment.Center,z=14})
 
-local logo=Instance.new("Frame",Header); logo.Size=UDim2.new(0,36,0,36); logo.Position=UDim2.new(0,14,0.5,-18)
-logo.BackgroundColor3=T.RAISED; logo.BackgroundTransparency=0.05; logo.BorderSizePixel=0; Cnr(logo,9); Strk(logo,T.ACCENT,2,0.4)
-MkLabel(logo,{text="D",size=18,color=T.ACCENT,font=Bold,sz=UDim2.new(1,0,1,0),xa=Enum.TextXAlignment.Center,z=14})
+local TitleLbl=MkLabel(Header,{text="SLIENT",size=14,color=T.TEXT,font=Bold,sz=UDim2.new(0,80,0,18),pos=UDim2.new(0,48,0,8),z=14})
+local VersionLbl=MkLabel(Header,{text="v1.4.2",size=9,color=T.MUTED,font=Reg,sz=UDim2.new(0,80,0,14),pos=UDim2.new(0,48,0,26),z=14})
 
-local TitleLbl=MkLabel(Header,{text="DENIZ ENGINE",size=16,color=T.TEXT,font=Bold,sz=UDim2.new(0,140,0,22),pos=UDim2.new(0,56,0,12),z=14})
-local VersionLbl=MkLabel(Header,{text="V5 - w love by Deniz 🖤",size=7,color=T.ACCENT,font=Reg,sz=UDim2.new(0,200,0,12),pos=UDim2.new(0,56,0,34),z=14})
+local pulseDot=Instance.new("Frame",Header); pulseDot.Size=UDim2.new(0,6,0,6); pulseDot.Position=UDim2.new(1,-18,0,6)
+pulseDot.BackgroundColor3=T.ACCENT; pulseDot.BackgroundTransparency=0; pulseDot.BorderSizePixel=0; Cnr(pulseDot,3)
 
-local hdrHue=0
+local pulseTime=0
 TC(RunSvc.RenderStepped:Connect(function(dt)
-    pcall(function()
-    if _G.DENIZ_fpsBoost then logoGlow.Visible=false; return else logoGlow.Visible=true end
-    hdrHue=(hdrHue+dt*0.3)%1
-    TitleLbl.TextColor3=Color3.fromHSV(hdrHue,0.8,1)
-    local glowClr=Color3.fromHSV(hdrHue,0.7,0.6)
-    logoGlow.BackgroundColor3=glowClr
-    logoGlow.BackgroundTransparency=0.65+math.sin((plexusTime or 0)*1.5)*0.1
-    end)
-end))
-
-local ShimmerPool={}
-for i=1,15 do
-    local s=Instance.new("Frame",Win); s.Size=UDim2.new(0,2,0,2); s.BackgroundColor3=T.ACCENT; s.BackgroundTransparency=0.8; s.BorderSizePixel=0; s.ZIndex=12
-    local c=Instance.new("UICorner",s); c.CornerRadius=UDim.new(1,0)
-    local x=random(1,WW); local y=random(53,WH); local sp=0.3+random()*0.8; local sa=random()*4+2
-    s.Visible=false; insert(ShimmerPool,{f=s,x=x,y=y,speed=sp,amp=sa,phase=random()*6,life=0})
-end
-local shimmerTime=0
-TC(RunSvc.RenderStepped:Connect(function(dt)
-    pcall(function()
-    if _G.DENIZ_fpsBoost then
-        for _,sp in ipairs(ShimmerPool) do if sp.f then sp.f.Visible=false end end; return
-    else
-        for _,sp in ipairs(ShimmerPool) do if sp.f then sp.f.Visible=true end end
-    end
-    shimmerTime=(shimmerTime or 0)+dt
-    for _,sp in ipairs(ShimmerPool) do
-        if not sp.f or not sp.f.Parent then continue end
-        sp.life=(sp.life or 0)+dt
-        if sp.life<5 then
-            sp.y=(sp.y or 0)-dt*(sp.speed or 1)*30
-            sp.f.Position=UDim2.new(0,sp.x or 0,0,sp.y)
-            local vis=math.sin(shimmerTime*(sp.amp or 2)+(sp.phase or 0))*0.5+0.5
-            sp.f.BackgroundTransparency=0.7+vis*0.25
-            sp.f.Size=UDim2.new(0,1+vis*3,0,1+vis*3)
-        else
-            sp.f.Visible=false
-            sp.x=random(1,WW); sp.y=WH+random(0,50); sp.life=0; sp.speed=0.3+random()*0.8; sp.amp=random()*4+2
-            sp.f.Position=UDim2.new(0,sp.x,0,sp.y); sp.f.Visible=true
-        end
-    end
-    end)
+    pulseTime=(pulseTime+dt)%1
+    pulseDot.BackgroundTransparency=0.3+math.sin(pulseTime*math.pi*2)*0.4
 end))
 
 local CloseBtn=Instance.new("TextButton",Header)
-CloseBtn.Size=UDim2.new(0,28,0,28); CloseBtn.Position=UDim2.new(1,-42,0.5,-14)
-CloseBtn.BackgroundColor3=T.RAISED; CloseBtn.BackgroundTransparency=0.15; CloseBtn.Text="×"
-CloseBtn.FontFace=Bold; CloseBtn.TextSize=16; CloseBtn.TextColor3=T.MUTED
-CloseBtn.AutoButtonColor=false; CloseBtn.BorderSizePixel=0; CloseBtn.ZIndex=15; Cnr(CloseBtn,8)
+CloseBtn.Size=UDim2.new(0,24,0,24); CloseBtn.Position=UDim2.new(1,-34,0.5,-12)
+CloseBtn.BackgroundColor3=T.RAISED; CloseBtn.BackgroundTransparency=0; CloseBtn.Text="×"
+CloseBtn.FontFace=Bold; CloseBtn.TextSize=14; CloseBtn.TextColor3=T.MUTED
+CloseBtn.AutoButtonColor=false; CloseBtn.BorderSizePixel=0; CloseBtn.ZIndex=15; Cnr(CloseBtn,12)
 CloseBtn.MouseEnter:Connect(function() Tw(CloseBtn,{BackgroundColor3=T.ERR,TextColor3=T.TEXT},0.14) end)
 CloseBtn.MouseLeave:Connect(function() Tw(CloseBtn,{BackgroundColor3=T.RAISED,TextColor3=T.MUTED},0.14) end)
 CloseBtn.MouseButton1Click:Connect(function() Win.Visible=false end)
-
-local HDiv=Instance.new("Frame",Win)
-HDiv.Size=UDim2.new(1,0,0,1); HDiv.Position=UDim2.new(0,0,0,52)
-HDiv.BackgroundColor3=T.BORDER; HDiv.BackgroundTransparency=0.5; HDiv.BorderSizePixel=0; HDiv.ZIndex=14
 
 do
     local dragging,dragStart,startPos=false,nil,nil
@@ -685,59 +594,55 @@ end
 -- ════════════════════════════════════════════════════════════
 -- SIDEBAR + CONTENT
 -- ════════════════════════════════════════════════════════════
-local BODY_Y=53; local SIDE_W=140
+local BODY_Y=48; local SIDE_W=130
 
 local Sidebar=Instance.new("ScrollingFrame",Win)
 Sidebar.Size=UDim2.new(0,SIDE_W,0,WH-BODY_Y); Sidebar.Position=UDim2.new(0,0,0,BODY_Y)
-Sidebar.BackgroundTransparency=1; Sidebar.BorderSizePixel=0; Sidebar.ScrollBarThickness=3
+Sidebar.BackgroundColor3=T.RAISED; Sidebar.BackgroundTransparency=0.7; Sidebar.BorderSizePixel=0; Sidebar.ScrollBarThickness=3
 Sidebar.ScrollBarImageColor3=T.DIM; Sidebar.AutomaticCanvasSize=Enum.AutomaticSize.Y
 Sidebar.CanvasSize=UDim2.new(0,0,0,0); Sidebar.ZIndex=14; Sidebar.ClipsDescendants=true
-LP(Sidebar,8,8,10,10); LL(Sidebar,3)
-
-local SDiv=Instance.new("Frame",Win)
-SDiv.Size=UDim2.new(0,1,0,WH-BODY_Y); SDiv.Position=UDim2.new(0,SIDE_W,0,BODY_Y)
-SDiv.BackgroundColor3=T.BORDER; SDiv.BackgroundTransparency=0.5; SDiv.BorderSizePixel=0; SDiv.ZIndex=14
+LP(Sidebar,6,6,6,6); LL(Sidebar,2)
 
 local Content=Instance.new("Frame",Win)
-Content.Size=UDim2.new(0,WW-SIDE_W-1,0,WH-BODY_Y); Content.Position=UDim2.new(0,SIDE_W+1,0,BODY_Y)
+Content.Size=UDim2.new(0,WW-SIDE_W,0,WH-BODY_Y); Content.Position=UDim2.new(0,SIDE_W,0,BODY_Y)
 Content.BackgroundTransparency=1; Content.BorderSizePixel=0; Content.ClipsDescendants=true; Content.ZIndex=12
 
 -- ════════════════════════════════════════════════════════════
 -- TABS
 -- ════════════════════════════════════════════════════════════
 local TABS={
-    {n="Home",    i="🏠"},
-    {n="Combat",  i="⚔️"},
-    {n="RP Color",i="🌈"},
-    {n="Movement",i="🚀"},
-    {n="Targets", i="🎯"},
-    {n="Ghost",   i="👻"},
-    {n="Glitch",  i="⚡"},
-    {n="Headless",i="😵"},
-    {n="Spin",    i="🌀"},
-    {n="Settings",i="⚙️"},
-    {n="Configs", i="💾"},
-    {n="Advanced Cbt",i="👊"},
-    {n="Cbt Utils",i="🛡️"},
-    {n="Advantage",i="💎"},
+    {n="Home",     i="◈"},
+    {n="Combat",   i="◉"},
+    {n="Style",    i="✦"},
+    {n="Move",     i="▲"},
+    {n="Targets",  i="◎"},
+    {n="Ghost",    i="○"},
+    {n="Glitch",   i="⚡"},
+    {n="Headless", i="◐"},
+    {n="Spin",     i="⟳"},
+    {n="Settings", i="◇"},
+    {n="Configs",  i="▣"},
+    {n="Cbt Adv",  i="⊕"},
+    {n="Cbt Util", i="⊡"},
+    {n="Advantage",i="◆"},
 }
 
 local tabBtns={}; local tabPanels={}; local activeTab=nil; local transiting=false
 
 for i,t in ipairs(TABS) do
     local btn=Instance.new("TextButton",Sidebar)
-    btn.Size=UDim2.new(1,0,0,38); btn.BackgroundColor3=T.CARD; btn.BackgroundTransparency=1
-    btn.Text=""; btn.AutoButtonColor=false; btn.BorderSizePixel=0; btn.LayoutOrder=i; btn.ZIndex=15; Cnr(btn,7)
+    btn.Size=UDim2.new(1,0,0,34); btn.BackgroundTransparency=1
+    btn.Text=""; btn.AutoButtonColor=false; btn.BorderSizePixel=0; btn.LayoutOrder=i; btn.ZIndex=15; Cnr(btn,6)
     
-    local bar=Instance.new("Frame",btn); bar.Size=UDim2.new(0,3,0,20); bar.Position=UDim2.new(0,0,0.5,-10)
-    bar.BackgroundColor3=T.ACCENT; bar.BackgroundTransparency=1; bar.BorderSizePixel=0; Cnr(bar,2)
+    local bar=Instance.new("Frame",btn); bar.Size=UDim2.new(0,2,0,20); bar.Position=UDim2.new(0,0,0.5,-10)
+    bar.BackgroundColor3=T.ACCENT; bar.BackgroundTransparency=1; bar.BorderSizePixel=0; Cnr(bar,1)
     
-    local ic=Instance.new("TextLabel",btn); ic.Size=UDim2.new(0,24,1,0); ic.Position=UDim2.new(0,8,0,0)
-    ic.BackgroundTransparency=1; ic.Text=t.i; ic.TextSize=14; ic.TextColor3=T.DIM; ic.FontFace=Bold
+    local ic=Instance.new("TextLabel",btn); ic.Size=UDim2.new(0,20,1,0); ic.Position=UDim2.new(0,10,0,0)
+    ic.BackgroundTransparency=1; ic.Text=t.i; ic.TextSize=9; ic.TextColor3=T.DIM; ic.FontFace=Bold
     ic.TextXAlignment=Enum.TextXAlignment.Center; ic.ZIndex=15
     
-    local nl=Instance.new("TextLabel",btn); nl.Size=UDim2.new(1,-36,1,0); nl.Position=UDim2.new(0,36,0,0)
-    nl.BackgroundTransparency=1; nl.Text=t.n:upper(); nl.TextSize=8; nl.TextColor3=T.MUTED; nl.FontFace=Bold
+    local nl=Instance.new("TextLabel",btn); nl.Size=UDim2.new(1,-34,1,0); nl.Position=UDim2.new(0,34,0,0)
+    nl.BackgroundTransparency=1; nl.Text=t.n:upper(); nl.TextSize=7; nl.TextColor3=T.MUTED; nl.FontFace=Bold
     nl.TextXAlignment=Enum.TextXAlignment.Left; nl.ZIndex=15
     
     local panel=Instance.new("ScrollingFrame",Content)
@@ -747,7 +652,7 @@ for i,t in ipairs(TABS) do
     panel.ClipsDescendants=true; panel.Visible=false; panel.ZIndex=12
     LP(panel,14,14,12,24); LL(panel,8)
     
-    btn.MouseEnter:Connect(function() if activeTab~=i then Tw(btn,{BackgroundTransparency=0.7},0.12) end end)
+    btn.MouseEnter:Connect(function() if activeTab~=i then Tw(btn,{BackgroundColor3=T.RAISED,BackgroundTransparency=0.5},0.12) end end)
     btn.MouseLeave:Connect(function() if activeTab~=i then Tw(btn,{BackgroundTransparency=1},0.12) end end)
     
     tabBtns[i]={btn=btn,bar=bar,ic=ic,nl=nl}; tabPanels[i]=panel
@@ -759,7 +664,7 @@ local function GoTab(idx)
     
     for i,tb in ipairs(tabBtns) do
         local a=(i==idx)
-        Tw(tb.btn,{BackgroundTransparency=a and 0.05 or 1,BackgroundColor3=a and T.CARD or T.BG},0.16)
+        Tw(tb.btn,{BackgroundColor3=a and T.ACCENT or T.RAISED,BackgroundTransparency=a and 0.85 or 1},0.16)
         Tw(tb.nl,{TextColor3=a and T.TEXT or T.MUTED},0.16)
         Tw(tb.ic,{TextColor3=a and T.ACCENT or T.DIM},0.16)
         Tw(tb.bar,{BackgroundTransparency=a and 0 or 1},0.2)
@@ -789,9 +694,9 @@ end
 -- TOGGLE BUTTON
 -- ════════════════════════════════════════════════════════════
 local TBtn=Instance.new("TextButton",GUI)
-TBtn.Name="DENIZ_Toggle"; TBtn.Size=UDim2.fromOffset(52,52)
+TBtn.Name="SLIENT_Toggle"; TBtn.Size=UDim2.fromOffset(52,52)
 TBtn.BackgroundColor3=T.BG; TBtn.BackgroundTransparency=0.02
-TBtn.Text="D"; TBtn.FontFace=Bold; TBtn.TextSize=18; TBtn.TextColor3=T.ACCENT
+TBtn.Text="S"; TBtn.FontFace=Bold; TBtn.TextSize=18; TBtn.TextColor3=T.ACCENT
 TBtn.AutoButtonColor=false; TBtn.BorderSizePixel=0; TBtn.ZIndex=200
 Cnr(TBtn,12); Strk(TBtn,T.ACCENT,1.8,0.2)
 
@@ -872,9 +777,8 @@ end
 do
     local P=tabPanels[1]
     local wc=MkCard(P,76,1)
-    MkLabel(wc,{text="Welcome back",size=9,color=T.MUTED,font=Reg,sz=UDim2.new(1,-32,0,14),pos=UDim2.new(0,16,0,10),z=14})
+    MkLabel(wc,{text="hey, "..lp.DisplayName.." ✦",size=9,color=T.MUTED,font=Reg,sz=UDim2.new(1,-32,0,14),pos=UDim2.new(0,16,0,10),z=14})
     local wnL=MkLabel(wc,{text=lp.DisplayName,size=22,color=T.TEXT,font=Bold,sz=UDim2.new(1,-32,0,30),pos=UDim2.new(0,16,0,26),z=14})
-    local wnH=0; TC(RunSvc.Heartbeat:Connect(function(dt) wnH=(wnH+dt*0.5)%1; wnL.TextColor3=Color3.fromHSV(wnH,1,1) end))
     MkLabel(wc,{text="@"..lp.Name.." · ID: "..lp.UserId,size=8,color=T.DIM,font=Reg,sz=UDim2.new(1,-32,0,12),pos=UDim2.new(0,16,0,58),z=14})
     
     local sc=MkCard(P,42,2)
@@ -882,12 +786,12 @@ do
     
     local ulCard=MkCard(P,48,3)
     MkLabel(ulCard,{text="UNLOAD ENGINE",size=8,color=T.DIM,font=Bold,sz=UDim2.new(1,-32,0,12),pos=UDim2.new(0,16,0,8),z=14})
-    local ulBtn=MkBtn(ulCard,{bg=T.ERR,text="UNLOAD DENIZ",size=10,color=T.TEXT,sz=UDim2.new(1,-32,0,26),pos=UDim2.new(0,16,0,20),corner=7,bgt=0.1,z=15})
+    local ulBtn=MkBtn(ulCard,{bg=T.ERR,text="UNLOAD SLIENT",size=10,color=T.TEXT,sz=UDim2.new(1,-32,0,26),pos=UDim2.new(0,16,0,20),corner=7,bgt=0.1,z=15})
     local ulC=false
     ulBtn.MouseButton1Click:Connect(function()
         if not ulC then
             ulC=true; ulBtn.Text="CLICK AGAIN TO CONFIRM"
-            task.delay(3,function() ulC=false; ulBtn.Text="UNLOAD DENIZ" end)
+            task.delay(3,function() ulC=false; ulBtn.Text="UNLOAD SLIENT" end)
         else
             for _,c in ipairs(CONNS) do pcall(function() c:Disconnect() end) end
             DoSave(); Notif("Unload","Goodbye!","warn")
@@ -1309,7 +1213,7 @@ do
     end
     RegKB("Manual Grab",Enum.KeyCode.G,function() fireGrab() end)
 
-    local sgThread=nil
+    local sgOn=false; local sgThread=nil
     local _,_,sgSet=MkToggle(P,"SPAM GRAB",39,
         function()
             sgOn=true
@@ -1323,7 +1227,7 @@ do
             Notif("Spam Grab","Active","ok")
         end,
         function() sgOn=false; sgThread=nil; Notif("Spam Grab","Off","") end)
-    RegKB("Spam Grab",Enum.KeyCode.Y,function() sgOn=not sgOn; sgSet(sgOn) end)
+    RegKB("Spam Grab",Enum.KeyCode.Z,function() sgOn=not sgOn; sgSet(sgOn) end)
 
     local ggrabIdx=1
     local function doGrabTarget()
@@ -1448,7 +1352,7 @@ do
             Notif("Grab Glitch","→ "..tgt.DisplayName,"ok")
         end
         ggBtn.MouseButton1Click:Connect(doGG)
-        RegKB("Grab Glitch",Enum.KeyCode.H,doGG)
+        RegKB("Grab Glitch",Enum.KeyCode.U,doGG)
     end
 
     MkSep(P,"Extra Combat",45)
@@ -1838,7 +1742,7 @@ do
 end
 
 -- ═══════════════════════════════════════
--- TAB 3: RP COLOR
+-- TAB 3: STYLE
 -- ═══════════════════════════════════════
 do
     local P=tabPanels[3]
@@ -1852,7 +1756,7 @@ do
             local t=line:match("^%s*(.-)%s*$")
             if t~="" then insert(_userPhrases,t) end
         end
-        if #_userPhrases==0 then insert(_userPhrases,"DENIZ!") end
+        if #_userPhrases==0 then insert(_userPhrases,"SLIENT!") end
     end
     parseUserPhrases(SAVE.phrases)
     
@@ -1960,11 +1864,11 @@ do
     end
     
     local _,_,rpSet=MkToggle(P,"RP COLOR",1,
-        function() rpOn=true; startRP(); Notif("RP Color","Active","ok") end,
-        function() rpOn=false; if rpConn then rpConn:Disconnect();rpConn=nil end; Notif("RP Color","Off","") end)
-    RegKB("RP Color",Enum.KeyCode.R,function()
+        function() rpOn=true; startRP(); Notif("Style","Active","ok") end,
+        function() rpOn=false; if rpConn then rpConn:Disconnect();rpConn=nil end; Notif("Style","Off","") end)
+    RegKB("Style",Enum.KeyCode.R,function()
         rpOn=not rpOn; rpSet(rpOn)
-        if rpOn then startRP(); Notif("RP Color","Active","ok") else if rpConn then rpConn:Disconnect();rpConn=nil end; Notif("RP Color","Off","") end
+        if rpOn then startRP(); Notif("Style","Active","ok") else if rpConn then rpConn:Disconnect();rpConn=nil end; Notif("Style","Off","") end
     end)
     
     MkSlider(P,"COLOR SPEED",1,100,SAVE.rpSpeed,2,function(v)
@@ -2044,39 +1948,39 @@ end
 do
     local P=tabPanels[4]
     
-    _G.DENIZ_tpwOn=false; _G.DENIZ_tpwSpd=SAVE.tpwSpeed; local tpwConn; local tpwStack=0
+    _G.SLIENT_tpwOn=false; _G.SLIENT_tpwSpd=SAVE.tpwSpeed; local tpwConn; local tpwStack=0
     local function startTPW()
         if tpwConn then tpwConn:Disconnect() end
         tpwConn=TC(RunSvc.Heartbeat:Connect(function(dt)
-            if not _G.DENIZ_tpwOn then return end
+            if not _G.SLIENT_tpwOn then return end
             local ch=lp.Character; if not ch then return end
             local hum=ch:FindFirstChildWhichIsA("Humanoid")
             if not (hum and hum.Health>0) then return end
             if hum.MoveDirection.Magnitude>0 then
-                pcall(function() ch:TranslateBy(hum.MoveDirection*(_G.DENIZ_tpwSpd+tpwStack)*dt*10) end)
+                pcall(function() ch:TranslateBy(hum.MoveDirection*(_G.SLIENT_tpwSpd+tpwStack)*dt*10) end)
             end
         end))
     end
     
     local _,_,tpwSet=MkToggle(P,"TPWALK",1,
-        function() _G.DENIZ_tpwOn=true; startTPW(); Notif("TPWalk","Active","ok") end,
-        function() _G.DENIZ_tpwOn=false; tpwStack=0; if tpwConn then tpwConn:Disconnect();tpwConn=nil end; Notif("TPWalk","Off","") end)
+        function() _G.SLIENT_tpwOn=true; startTPW(); Notif("TPWalk","Active","ok") end,
+        function() _G.SLIENT_tpwOn=false; tpwStack=0; if tpwConn then tpwConn:Disconnect();tpwConn=nil end; Notif("TPWalk","Off","") end)
     RegKB("TPWalk",Enum.KeyCode.T,function()
-        _G.DENIZ_tpwOn=not _G.DENIZ_tpwOn; tpwSet(_G.DENIZ_tpwOn)
-        if _G.DENIZ_tpwOn then startTPW(); Notif("TPWalk","Active","ok") else tpwStack=0; if tpwConn then tpwConn:Disconnect();tpwConn=nil end; Notif("TPWalk","Off","") end
+        _G.SLIENT_tpwOn=not _G.SLIENT_tpwOn; tpwSet(_G.SLIENT_tpwOn)
+        if _G.SLIENT_tpwOn then startTPW(); Notif("TPWalk","Active","ok") else tpwStack=0; if tpwConn then tpwConn:Disconnect();tpwConn=nil end; Notif("TPWalk","Off","") end
     end)
     
-    MkSlider(P,"TPWALK SPEED",1,80,SAVE.tpwSpeed,2,function(v) _G.DENIZ_tpwSpd=v; SAVE.tpwSpeed=v; task.delay(.5,DoSave) end)
+    MkSlider(P,"TPWALK SPEED",1,80,SAVE.tpwSpeed,2,function(v) _G.SLIENT_tpwSpd=v; SAVE.tpwSpeed=v; task.delay(.5,DoSave) end)
     
-    _G.DENIZ_flyOn=false; _G.DENIZ_flySpd=SAVE.flySpeed; local flyConn; local fbv,fbg
+    _G.SLIENT_flyOn=false; _G.SLIENT_flySpd=SAVE.flySpeed; local flyConn; local fbv,fbg
     local function startFly()
         local char=lp.Character; if not char then return end
         local hrp=char:FindFirstChild("HumanoidRootPart"); if not hrp then return end
         local hum=char:FindFirstChildOfClass("Humanoid"); if hum then hum.PlatformStand=true end
         fbv=Instance.new("BodyVelocity",hrp); fbv.MaxForce=Vector3.new(1e5,1e5,1e5); fbv.Velocity=Vector3.zero
-        fbg=Instance.new("BodyGyro",hrp); fbg.MaxTorque=Vector3.new(1e5,1e5,1e5); fbg.D=150; _G.DENIZ_flyOn=true
+        fbg=Instance.new("BodyGyro",hrp); fbg.MaxTorque=Vector3.new(1e5,1e5,1e5); fbg.D=150; _G.SLIENT_flyOn=true
         flyConn=TC(RunSvc.RenderStepped:Connect(function()
-            if not _G.DENIZ_flyOn then return end
+            if not _G.SLIENT_flyOn then return end
             local c=workspace.CurrentCamera; if not c then return end; local v=Vector3.zero
             if UIS:IsKeyDown(Enum.KeyCode.W) then v=v+c.CFrame.LookVector end
             if UIS:IsKeyDown(Enum.KeyCode.S) then v=v-c.CFrame.LookVector end
@@ -2084,13 +1988,13 @@ do
             if UIS:IsKeyDown(Enum.KeyCode.D) then v=v+c.CFrame.RightVector end
             if UIS:IsKeyDown(Enum.KeyCode.Space) then v=v+Vector3.new(0,1,0) end
             if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then v=v-Vector3.new(0,1,0) end
-            if v.Magnitude>0 then v=v.Unit*_G.DENIZ_flySpd end
+            if v.Magnitude>0 then v=v.Unit*_G.SLIENT_flySpd end
             if fbv and fbv.Parent then fbv.Velocity=v end
             if fbg and fbg.Parent then fbg.CFrame=c.CFrame end
         end))
     end
     local function stopFly()
-        _G.DENIZ_flyOn=false; if flyConn then flyConn:Disconnect();flyConn=nil end
+        _G.SLIENT_flyOn=false; if flyConn then flyConn:Disconnect();flyConn=nil end
         pcall(function() if fbv then fbv:Destroy() end end)
         pcall(function() if fbg then fbg:Destroy() end end)
         pcall(function() lp.Character:FindFirstChildOfClass("Humanoid").PlatformStand=false end)
@@ -2100,7 +2004,7 @@ do
         function() startFly(); Notif("Fly","Active","ok") end,
         function() stopFly(); Notif("Fly","Off","") end)
     
-    MkSlider(P,"FLY SPEED",1,300,SAVE.flySpeed,4,function(v) _G.DENIZ_flySpd=v; SAVE.flySpeed=v; task.delay(.5,DoSave) end)
+    MkSlider(P,"FLY SPEED",1,300,SAVE.flySpeed,4,function(v) _G.SLIENT_flySpd=v; SAVE.flySpeed=v; task.delay(.5,DoSave) end)
     MkSlider(P,"WALK SPEED",1,500,16,5,function(v) pcall(function() lp.Character:FindFirstChildOfClass("Humanoid").WalkSpeed=v end) end)
     MkSlider(P,"JUMP POWER",1,500,50,6,function(v) pcall(function() local h=lp.Character:FindFirstChildOfClass("Humanoid"); h.UseJumpPower=true; h.JumpPower=v end) end)
     MkSlider(P,"GRAVITY",1,600,196,7,function(v) pcall(function() workspace.Gravity=v end) end)
@@ -2463,17 +2367,15 @@ do
     MkLabel(fbCard,{text="FPS BOOST",size=9,color=T.TEXT,font=Semi,sz=UDim2.new(1,-68,0,18),pos=UDim2.new(0,16,0.5,-9),z=14})
     local _,fbGet,fbSet=MkToggle(fbCard,"DISABLE EFFECTS",0,
         function()
-            _G.DENIZ_fpsBoost=true
+            _G.SLIENT_fpsBoost=true
             if PlexusCanvas then PlexusCanvas.Visible=false end
-            for _,sp in ipairs(ShimmerPool) do if sp.f then sp.f.Visible=false end end
-            if logoGlow then logoGlow.Visible=false end
+            if pulseDot then pulseDot.Visible=false end
             Notif("FPS Boost","Effects disabled","ok")
         end,
         function()
-            _G.DENIZ_fpsBoost=false
+            _G.SLIENT_fpsBoost=false
             if PlexusCanvas then PlexusCanvas.Visible=true end
-            for _,sp in ipairs(ShimmerPool) do if sp.f then sp.f.Visible=true end end
-            if logoGlow then logoGlow.Visible=true end
+            if pulseDot then pulseDot.Visible=true end
             Notif("FPS Boost","Effects enabled","")
         end)
     
@@ -3042,7 +2944,7 @@ do
     local _,_,ownerTagSet=MkToggle(P,"OWNER TAG",12,
         function() ownerTagOn=true; refreshOwnerTag(); Notif("Owner Tag","Active","ok") end,
         function() stopOwnerTag(); Notif("Owner Tag","Off","") end)
-    RegKB("Owner Tag",Enum.KeyCode.K,function() ownerTagOn=not ownerTagOn; ownerTagSet(ownerTagOn) end)
+    RegKB("Owner Tag",Enum.KeyCode.L,function() ownerTagOn=not ownerTagOn; ownerTagSet(ownerTagOn) end)
     Players.PlayerAdded:Connect(function(p) if isOwner(p) and p~=lp then refreshOwnerTag() end end)
     Players.PlayerRemoving:Connect(function(p) if isOwner(p) and p~=lp then stopOwnerTag() end end)
 end
@@ -3082,7 +2984,7 @@ do
                 Notif("Update","Rejoining to apply update","ok")
                 local code='loadstring(game:HttpGet("'..UPDATE_LOADSTR..'"))()'
                 local q=queueonteleport or queue_on_teleport or syn and syn.queue_on_teleport
-                if q then q(code) else writefile("deniz_update.lua",code) end
+                if q then q(code) else writefile("slient_update.lua",code) end
                 task.wait(0.5)
                 pcall(function() game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,game.JobId,lp) end)
             end)
@@ -3093,10 +2995,10 @@ do
     end)
 end
 
-print("✓ Deniz Engine starting...")
+print("✓ Slient starting...")
 
 Win.Visible=true
 GoTab(1)
 
-print("✓ Deniz Engine loaded!")
-Notif("DENIZ V5","Your arsenal has loaded!","ok")
+print("✓ Slient loaded!")
+Notif("SLIENT V5","Your arsenal has loaded!","ok")
