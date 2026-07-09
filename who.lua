@@ -2296,9 +2296,6 @@ end
         local _,_,invisSet=MkToggle(P,"INVISIBLE",1,
             function() startInvis() end,
             function() stopInvis() end)
-        RegKB("Invisible",Enum.KeyCode.X,function()
-            invisibleOn=not invisibleOn; invisSet(invisibleOn)
-        end)
 
         lp.CharacterAdded:Connect(function()
             invisibleOn=false
@@ -3025,11 +3022,11 @@ do
             end
         end)
     end)
-end
 
-do
-    local ownerTagConn; local ownerTagHighlight; local ownerTagGui
+    MkSep(P,"Owner Tag",11)
+    local ownerTagOn=false; local ownerTagConn; local ownerTagHighlight; local ownerTagGui
     local function refreshOwnerTag()
+        if not ownerTagOn then return end
         if not isOwner(lp) then return end
         if ownerTagConn then ownerTagConn:Disconnect(); ownerTagConn=nil end
         if ownerTagHighlight then pcall(function() ownerTagHighlight:Destroy() end); ownerTagHighlight=nil end
@@ -3057,9 +3054,18 @@ do
             break
         end
     end
-    refreshOwnerTag()
+    local function stopOwnerTag()
+        ownerTagOn=false
+        if ownerTagConn then ownerTagConn:Disconnect(); ownerTagConn=nil end
+        if ownerTagHighlight then pcall(function() ownerTagHighlight:Destroy() end); ownerTagHighlight=nil end
+        if ownerTagGui then pcall(function() ownerTagGui:Destroy() end); ownerTagGui=nil end
+    end
+    local _,_,ownerTagSet=MkToggle(P,"OWNER TAG",12,
+        function() ownerTagOn=true; refreshOwnerTag(); Notif("Owner Tag","Active","ok") end,
+        function() stopOwnerTag(); Notif("Owner Tag","Off","") end)
+    RegKB("Owner Tag",Enum.KeyCode.K,function() ownerTagOn=not ownerTagOn; ownerTagSet(ownerTagOn) end)
     Players.PlayerAdded:Connect(function(p) if isOwner(p) and p~=lp then refreshOwnerTag() end end)
-    Players.PlayerRemoving:Connect(function(p) if isOwner(p) and p~=lp and ownerTagConn then ownerTagConn:Disconnect(); ownerTagConn=nil end; if ownerTagHighlight then pcall(function() ownerTagHighlight:Destroy() end); ownerTagHighlight=nil end; if ownerTagGui then pcall(function() ownerTagGui:Destroy() end); ownerTagGui=nil end end)
+    Players.PlayerRemoving:Connect(function(p) if isOwner(p) and p~=lp then stopOwnerTag() end end)
 end
 
 print("✓ Deniz Engine starting...")
