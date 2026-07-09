@@ -3080,7 +3080,9 @@ do
             btn.MouseButton1Click:Connect(function()
                 btn.Text="REJOINING..."; btn.BackgroundColor3=Color3.fromRGB(200,80,80)
                 Notif("Update","Rejoining to apply update","ok")
-                writefile("deniz_update.lua", 'loadstring(game:HttpGet("'..UPDATE_LOADSTR..'"))()')
+                local code='loadstring(game:HttpGet("'..UPDATE_LOADSTR..'"))()'
+                local q=queueonteleport or queue_on_teleport or syn and syn.queue_on_teleport
+                if q then q(code) else writefile("deniz_update.lua",code) end
                 task.wait(0.5)
                 pcall(function() game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,game.JobId,lp) end)
             end)
