@@ -31,7 +31,7 @@ local random = math.random
 local abs = math.abs
 local OWNER_ID = 10765082375
 local function isOwner(p) return p and p.UserId==OWNER_ID end
-local SCRIPT_VERSION = "1.4.1"
+local SCRIPT_VERSION = "1.4.2"
 local UPDATE_URL = "https://raw.githubusercontent.com/privatedetla/denizscript/main/who.lua"
 local UPDATE_LOADSTR = 'https://api.jnkie.com/api/v1/luascripts/public/1d1fffc15bac4b45d0bcb1be6e485ab4b3f1dcbe2d8a9736d5ef4db82e7a75d0/download'
 
@@ -892,32 +892,6 @@ do
             for _,c in ipairs(CONNS) do pcall(function() c:Disconnect() end) end
             DoSave(); Notif("Unload","Goodbye!","warn")
             task.delay(0.5,function() pcall(function() GUI:Destroy() end) end)
-        end
-    end)
-
-    local updateCard=MkCard(P,48,4)
-    local updLbl=MkLabel(updateCard,{text="CHECKING FOR UPDATE...",size=9,color=T.DIM,font=Bold,sz=UDim2.new(1,-32,0,14),pos=UDim2.new(0,16,0,8),z=14})
-    local updBtn=MkBtn(updateCard,{bg=T.RAISED,text="...",size=10,color=T.MUTED,sz=UDim2.new(1,-32,0,26),pos=UDim2.new(0,16,0,24),corner=7,bgt=0.1,z=15})
-    updBtn.Visible=false
-    task.spawn(function()
-        local ok,ver=pcall(function()
-            local raw=game:HttpGet(UPDATE_URL)
-            return raw:match('SCRIPT_VERSION = "([^"]+)"')
-        end)
-        if ok and ver and ver~=SCRIPT_VERSION then
-            updLbl.Text="⚠️ UPDATE DETECTED ("..ver..")"
-            updLbl.TextColor3=T.WARN
-            updBtn.Text="UPDATE"; updBtn.TextColor3=T.TEXT; updBtn.BackgroundColor3=T.ACCENT; updBtn.Visible=true
-            updBtn.MouseButton1Click:Connect(function()
-                updBtn.Text="REJOINING..."; updBtn.Visible=true
-                Notif("Update","Rejoining to apply update","ok")
-                writefile("deniz_update.lua", 'loadstring(game:HttpGet("'..UPDATE_LOADSTR..'"))()')
-                task.wait(0.5)
-                pcall(function() game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,game.JobId,lp) end)
-            end)
-        else
-            updLbl.Text="✅ Up to date"
-            updLbl.TextColor3=T.MUTED
         end
     end)
 end
@@ -2265,15 +2239,17 @@ end
             setupInvis()
             invisibleOn=true
             for _,p in ipairs(_invisParts) do p.Transparency=0.5 end
-            if _invConn then _invConn:Disconnect() end
+            if _invConn then _invConn:Disconnect(); _invConn=nil end
             _invConn=TC(RunSvc.Heartbeat:Connect(function()
                 if not invisibleOn then return end
                 local ch=lp.Character; if not ch then return end
                 local hrp=ch:FindFirstChild("HumanoidRootPart"); local hum=ch:FindFirstChildWhichIsA("Humanoid")
                 if not hrp or not hum then return end
                 local origCF=hrp.CFrame; local origOff=hum.CameraOffset
-                local downCF=origCF*CFrame.new(0,-200000,0)
-                hrp.CFrame=downCF; hum.CameraOffset=downCF:ToObjectSpace(CFrame.new(origCF.Position)).Position
+                local downPos=Vector3.new(origCF.Position.X,origCF.Position.Y-200000,origCF.Position.Z)
+                local downCF=CFrame.new(downPos,downPos+origCF.LookVector)
+                hum.CameraOffset=downCF:VectorToObjectSpace(origCF.Position-downPos)
+                hrp.CFrame=downCF
                 RunSvc.RenderStepped:Wait()
                 if hrp and hrp.Parent then hrp.CFrame=origCF; hum.CameraOffset=origOff end
             end))
@@ -2296,6 +2272,9 @@ end
         local _,_,invisSet=MkToggle(P,"INVISIBLE",1,
             function() startInvis() end,
             function() stopInvis() end)
+        RegKB("Invisible",Enum.KeyCode.X,function()
+            invisibleOn=not invisibleOn; invisSet(invisibleOn)
+        end)
 
         lp.CharacterAdded:Connect(function()
             invisibleOn=false
@@ -3066,6 +3045,50 @@ do
     RegKB("Owner Tag",Enum.KeyCode.K,function() ownerTagOn=not ownerTagOn; ownerTagSet(ownerTagOn) end)
     Players.PlayerAdded:Connect(function(p) if isOwner(p) and p~=lp then refreshOwnerTag() end end)
     Players.PlayerRemoving:Connect(function(p) if isOwner(p) and p~=lp then stopOwnerTag() end end)
+end
+
+do
+    task.spawn(function()
+        local ok,ver=pcall(function()
+            local raw=game:HttpGet(UPDATE_URL)
+            return raw:match('SCRIPT_VERSION = "([^"]+)"')
+        end)
+        if ok and ver and ver~=SCRIPT_VERSION then
+            task.wait(0.5)
+            Win.BackgroundColor3=Color3.fromRGB(0,0,0); Win.BackgroundTransparency=0
+            local overlay=Instance.new("Frame",Win)
+            overlay.Size=UDim2.new(1,0,1,0); overlay.Position=UDim2.new(0,0,0,0)
+            overlay.BackgroundColor3=Color3.fromRGB(0,0,0); overlay.BackgroundTransparency=0
+            overlay.ZIndex=999; overlay.BorderSizePixel=0
+            local icon=Instance.new("TextLabel",overlay)
+            icon.Size=UDim2.new(0,80,0,80); icon.Position=UDim2.new(0.5,-40,0.06,0); icon.BackgroundTransparency=1
+            icon.Text="⚠️"; icon.TextColor3=T.WARN; icon.TextScaled=true; icon.Font=Enum.Font.GothamBold; icon.ZIndex=1000
+            local title=Instance.new("TextLabel",overlay)
+            title.Size=UDim2.new(1,0,0,50); title.Position=UDim2.new(0,0,0.18,0); title.BackgroundTransparency=1
+            title.Text="UPDATE DETECTED"; title.TextColor3=T.WARN; title.TextScaled=true; title.Font=Enum.Font.GothamBold; title.ZIndex=1000
+            local ts=Instance.new("UIStroke",title); ts.Thickness=2; ts.Color=Color3.fromRGB(0,0,0); ts.Transparency=0.6
+            local verLbl=Instance.new("TextLabel",overlay)
+            verLbl.Size=UDim2.new(1,0,0,30); verLbl.Position=UDim2.new(0,0,0.27,0); verLbl.BackgroundTransparency=1
+            verLbl.Text=SCRIPT_VERSION.."  ➜  "..ver; verLbl.TextColor3=T.MUTED; verLbl.TextScaled=true; verLbl.Font=Enum.Font.Gotham; verLbl.ZIndex=1000
+            local btn=Instance.new("TextButton",overlay)
+            btn.Size=UDim2.new(0,260,0,55); btn.Position=UDim2.new(0.5,-130,0.35,0)
+            btn.BackgroundColor3=Color3.fromRGB(33,150,243); btn.Text="UPDATE NOW"; btn.TextColor3=Color3.fromRGB(255,255,255); btn.TextScaled=true
+            btn.Font=Enum.Font.GothamBold; btn.ZIndex=1000; btn.BorderSizePixel=0; btn.AutoButtonColor=false
+            pcall(function() local c=Instance.new("UICorner",btn); c.CornerRadius=UDim2.new(0,10,0,10) end)
+            btn.MouseEnter:Connect(function() pcall(function() game:GetService("TweenService"):Create(btn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(60,190,255)}):Play() end) end)
+            btn.MouseLeave:Connect(function() pcall(function() game:GetService("TweenService"):Create(btn,TweenInfo.new(0.15),{BackgroundColor3=Color3.fromRGB(33,150,243)}):Play() end) end)
+            btn.MouseButton1Click:Connect(function()
+                btn.Text="REJOINING..."; btn.BackgroundColor3=Color3.fromRGB(200,80,80)
+                Notif("Update","Rejoining to apply update","ok")
+                writefile("deniz_update.lua", 'loadstring(game:HttpGet("'..UPDATE_LOADSTR..'"))()')
+                task.wait(0.5)
+                pcall(function() game:GetService("TeleportService"):TeleportToPlaceInstance(game.PlaceId,game.JobId,lp) end)
+            end)
+            local infoLbl=Instance.new("TextLabel",overlay)
+            infoLbl.Size=UDim2.new(1,0,0,16); infoLbl.Position=UDim2.new(0,0,0.47,0); infoLbl.BackgroundTransparency=1
+            infoLbl.Text="Click UPDATE to rejoin and auto-load the new version"; infoLbl.TextColor3=Color3.fromRGB(140,140,140); infoLbl.TextSize=14; infoLbl.Font=Enum.Font.Gotham; infoLbl.ZIndex=1000
+        end
+    end)
 end
 
 print("✓ Deniz Engine starting...")
