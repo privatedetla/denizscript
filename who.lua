@@ -2296,7 +2296,7 @@ end
         local _,_,invisSet=MkToggle(P,"INVISIBLE",1,
             function() startInvis() end,
             function() stopInvis() end)
-        RegKB("Invisible",nil,function()
+        RegKB("Invisible",Enum.KeyCode.X,function()
             invisibleOn=not invisibleOn; invisSet(invisibleOn)
         end)
 
@@ -2706,52 +2706,8 @@ do
                             task.wait(0.1)
                             pcall(function()
                                 if RF.Hit then RF.Hit:InvokeServer(hum,vector.create(h.Position.X,h.Position.Y,h.Position.Z)) end
-    end)
-
-    MkSep(P,"Owner Tag",11)
-    local ownerTagOn=false; local ownerTagConn; local ownerTagHighlight; local ownerTagGui
-    local function refreshOwnerTag()
-        if not ownerTagOn then return end
-        if not isOwner(lp) then return end
-        if ownerTagConn then ownerTagConn:Disconnect(); ownerTagConn=nil end
-        if ownerTagHighlight then pcall(function() ownerTagHighlight:Destroy() end); ownerTagHighlight=nil end
-        if ownerTagGui then pcall(function() ownerTagGui:Destroy() end); ownerTagGui=nil end
-        for _,p in Players:GetPlayers() do
-            if not isOwner(p) or p==lp then continue end
-            local function apply(c)
-                if not c then return end
-                local hrp=c:WaitForChild("HumanoidRootPart",10); if not hrp then return end
-                local h=Instance.new("Highlight")
-                h.FillColor=Color3.fromRGB(255,215,0); h.OutlineColor=Color3.fromRGB(255,170,0)
-                h.FillTransparency=0.4; h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop; h.Parent=c
-                ownerTagHighlight=h
-                local bg=Instance.new("BillboardGui")
-                bg.Size=UDim2.new(0,200,0,50); bg.StudsOffset=Vector3.new(0,4,0)
-                bg.AlwaysOnTop=true; bg.ClipsDescendants=false; bg.Parent=c; ownerTagGui=bg
-                local lbl=Instance.new("TextLabel",bg)
-                lbl.Size=UDim2.new(1,0,1,0); lbl.BackgroundTransparency=1; lbl.Text="👑 OWNER 👑"
-                lbl.TextColor3=Color3.fromRGB(255,215,0); lbl.TextStrokeColor3=Color3.fromRGB(255,170,0)
-                lbl.TextStrokeTransparency=0; lbl.Font=Enum.Font.GothamBold; lbl.TextScaled=true
-                lbl.TextXAlignment=Enum.TextXAlignment.Center; lbl.TextYAlignment=Enum.TextYAlignment.Center
-            end
-            if p.Character then apply(p.Character) end
-            ownerTagConn=p.CharacterAdded:Connect(apply)
-            break
-        end
-    end
-    local function stopOwnerTag()
-        ownerTagOn=false
-        if ownerTagConn then ownerTagConn:Disconnect(); ownerTagConn=nil end
-        if ownerTagHighlight then pcall(function() ownerTagHighlight:Destroy() end); ownerTagHighlight=nil end
-        if ownerTagGui then pcall(function() ownerTagGui:Destroy() end); ownerTagGui=nil end
-    end
-    local _,_,ownerTagSet=MkToggle(P,"OWNER TAG",12,
-        function() ownerTagOn=true; refreshOwnerTag(); Notif("Owner Tag","Active","ok") end,
-        function() stopOwnerTag(); Notif("Owner Tag","Off","") end)
-    RegKB("Owner Tag",nil,function() ownerTagOn=not ownerTagOn; ownerTagSet(ownerTagOn) end)
-    Players.PlayerAdded:Connect(function(p) if isOwner(p) and p~=lp then refreshOwnerTag() end end)
-    Players.PlayerRemoving:Connect(function(p) if isOwner(p) and p~=lp then stopOwnerTag() end end)
-end
+                            end)
+                        end
                     end
                 end
             end))
@@ -3071,7 +3027,40 @@ do
     end)
 end
 
-
+do
+    local ownerTagConn; local ownerTagHighlight; local ownerTagGui
+    local function refreshOwnerTag()
+        if not isOwner(lp) then return end
+        if ownerTagConn then ownerTagConn:Disconnect(); ownerTagConn=nil end
+        if ownerTagHighlight then pcall(function() ownerTagHighlight:Destroy() end); ownerTagHighlight=nil end
+        if ownerTagGui then pcall(function() ownerTagGui:Destroy() end); ownerTagGui=nil end
+        for _,p in Players:GetPlayers() do
+            if not isOwner(p) or p==lp then continue end
+            local function apply(c)
+                if not c then return end
+                local hrp=c:WaitForChild("HumanoidRootPart",10); if not hrp then return end
+                local h=Instance.new("Highlight")
+                h.FillColor=Color3.fromRGB(255,215,0); h.OutlineColor=Color3.fromRGB(255,170,0)
+                h.FillTransparency=0.4; h.DepthMode=Enum.HighlightDepthMode.AlwaysOnTop; h.Parent=c
+                ownerTagHighlight=h
+                local bg=Instance.new("BillboardGui")
+                bg.Size=UDim2.new(0,200,0,50); bg.StudsOffset=Vector3.new(0,4,0)
+                bg.AlwaysOnTop=true; bg.ClipsDescendants=false; bg.Parent=c; ownerTagGui=bg
+                local lbl=Instance.new("TextLabel",bg)
+                lbl.Size=UDim2.new(1,0,1,0); lbl.BackgroundTransparency=1; lbl.Text="👑 OWNER 👑"
+                lbl.TextColor3=Color3.fromRGB(255,215,0); lbl.TextStrokeColor3=Color3.fromRGB(255,170,0)
+                lbl.TextStrokeTransparency=0; lbl.Font=Enum.Font.GothamBold; lbl.TextScaled=true
+                lbl.TextXAlignment=Enum.TextXAlignment.Center; lbl.TextYAlignment=Enum.TextYAlignment.Center
+            end
+            if p.Character then apply(p.Character) end
+            ownerTagConn=p.CharacterAdded:Connect(apply)
+            break
+        end
+    end
+    refreshOwnerTag()
+    Players.PlayerAdded:Connect(function(p) if isOwner(p) and p~=lp then refreshOwnerTag() end end)
+    Players.PlayerRemoving:Connect(function(p) if isOwner(p) and p~=lp and ownerTagConn then ownerTagConn:Disconnect(); ownerTagConn=nil end; if ownerTagHighlight then pcall(function() ownerTagHighlight:Destroy() end); ownerTagHighlight=nil end; if ownerTagGui then pcall(function() ownerTagGui:Destroy() end); ownerTagGui=nil end end)
+end
 
 print("✓ Deniz Engine starting...")
 
