@@ -505,62 +505,6 @@ Win.BackgroundColor3=T.BG; Win.BackgroundTransparency=0.02
 Win.BorderSizePixel=0; Win.ClipsDescendants=true; Win.ZIndex=10
 Cnr(Win,16); Strk(Win,T.BORDER,1.4,0.25)
 
--- Plexus background
-local plexusOn=true
-local PlexusCanvas=Instance.new("Frame",Win)
-PlexusCanvas.Size=UDim2.new(1,0,1,0); PlexusCanvas.BackgroundTransparency=1; PlexusCanvas.ZIndex=10; PlexusCanvas.BorderSizePixel=0
-local plexusDots={}
-local dotCount=60
-for i=1,dotCount do
-    local dot=Instance.new("Frame",PlexusCanvas)
-    dot.Size=UDim2.new(0,2,0,2); dot.BackgroundColor3=T.DIM; dot.BorderSizePixel=0; dot.ZIndex=11
-    local p=Vector2.new(random()*760,random()*580)
-    local v=Vector2.new((random()-0.5)*0.3,(random()-0.5)*0.3)
-    table.insert(plexusDots,{f=dot,p=p,v=v})
-    dot.Position=UDim2.new(0,p.X,0,p.Y)
-end
-local linePool={}
-for i=1,dotCount*3 do
-    local l=Instance.new("Frame",PlexusCanvas)
-    l.Size=UDim2.new(0,0,0,0); l.BackgroundColor3=T.DIM; l.BorderSizePixel=0; l.ZIndex=11; l.Visible=false
-    table.insert(linePool,l)
-end
-local pConn=TC(RunSvc.RenderStepped:Connect(function()
-    if not plexusOn then return end
-    local ww,wh=Win.AbsoluteSize.X,Win.AbsoluteSize.Y
-    if ww<1 then ww=760 end; if wh<1 then wh=580 end
-    for _,d in ipairs(plexusDots) do
-        d.p+=d.v
-        if d.p.X<0 or d.p.X>ww then d.v=Vector2.new(-d.v.X,d.v.Y) end
-        if d.p.Y<0 or d.p.Y>wh then d.v=Vector2.new(d.v.X,-d.v.Y) end
-        d.f.Position=UDim2.new(0,d.p.X,0,d.p.Y)
-    end
-    local li=1
-    for i=1,#plexusDots do
-        for j=i+1,#plexusDots do
-            if li>#linePool then break end
-            local dx=plexusDots[i].p.X-plexusDots[j].p.X
-            local dy=plexusDots[i].p.Y-plexusDots[j].p.Y
-            local dist=math.sqrt(dx*dx+dy*dy)
-            if dist<200 then
-                local l=linePool[li]; li+=1; l.Visible=true
-                local angle=math.atan2(dy,dx)
-                l.Size=UDim2.new(0,dist,0,1)
-                l.Position=UDim2.new(0,plexusDots[i].p.X,0,plexusDots[i].p.Y)
-                l.Rotation=math.deg(angle)
-                l.BackgroundColor3=T.DIM
-                l.BackgroundTransparency=clamp(dist/200,0,0.8)
-            end
-        end
-    end
-    for i=li,#linePool do linePool[i].Visible=false end
-end))
-
-local WinBg=Instance.new("ImageLabel",Win)
-WinBg.Size=UDim2.new(1,0,1,0); WinBg.BackgroundTransparency=1
-WinBg.Image="rbxassetid://78240901898379"; WinBg.ImageTransparency=0.9
-WinBg.ScaleType=Enum.ScaleType.Crop; WinBg.ZIndex=10; WinBg.BorderSizePixel=0; Cnr(WinBg,16)
-
 local Header=Instance.new("Frame",Win)
 Header.Size=UDim2.new(1,0,0,52); Header.BackgroundTransparency=1; Header.BorderSizePixel=0; Header.ZIndex=14
 
@@ -2543,13 +2487,12 @@ end
             end
         end
 
-        MkToggle(P,"INVISIBLE",3,
+        local _,_,invisSet=MkToggle(P,"INVISIBLE",3,
             function() invisOn=true; startInvis(); Notif("Invisible","Active","ok") end,
             function() invisOn=false; stopInvis(); Notif("Invisible","Off","") end)
 
         RegKB("Invisible",Enum.KeyCode.X,function()
-            invisOn=not invisOn
-            if invisOn then startInvis(); Notif("Invisible","Active","ok") else stopInvis(); Notif("Invisible","Off","") end
+            invisOn=not invisOn; invisSet(invisOn)
         end)
     end
 
@@ -2747,10 +2690,7 @@ do
     local rwBtn=MkBtn(rwCard,{bg=T.RAISED,text="RESET WINDOW POSITION",size=9,color=T.TEXT,sz=UDim2.new(1,-28,0,24),pos=UDim2.new(0,14,0,8),corner=6,bgt=0.1,z=15})
     rwBtn.MouseButton1Click:Connect(function() Win.Position=UDim2.new(0.5,-WW/2,0.5,-WH/2); Notif("Window","Reset","ok") end)
     
-    MkSep(P,"Visual",3)
-    MkToggle(P,"DISABLE PLEXUS",31,function() plexusOn=false; PlexusCanvas.Visible=false; Notif("Plexus","Disabled","") end,function() plexusOn=true; PlexusCanvas.Visible=true; Notif("Plexus","Enabled","ok") end)
-    
-    MkSep(P,"Keybinds",4)
+    MkSep(P,"Keybinds",3)
     local kbCard=MkCard(P,240,4)
     MkLabel(kbCard,{text="CLICK BIND THEN PRESS KEY",size=7,color=T.DIM,font=Bold,sz=UDim2.new(1,-28,0,10),pos=UDim2.new(0,14,0,7),z=14})
     local kbSF=Instance.new("ScrollingFrame",kbCard); kbSF.Size=UDim2.new(1,-24,0,216); kbSF.Position=UDim2.new(0,12,0,20)
@@ -3128,9 +3068,10 @@ do
     MkSep(P,"Invisibility",1)
     
     local invisOn=false
+    local advInvisOn=false
     MkToggle(P,"INVISIBLE CHARACTER",2,
         function()
-            invisOn=true
+            advInvisOn=true
             local char=lp.Character
             if char then
                 for _,v in ipairs(char:GetDescendants()) do
@@ -3146,7 +3087,7 @@ do
             Notif("Invisible","Active","ok")
         end,
         function()
-            invisOn=false
+            advInvisOn=false
             local char=lp.Character
             if char then
                 for _,v in ipairs(char:GetDescendants()) do
