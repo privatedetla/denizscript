@@ -1926,13 +1926,16 @@ do
     _G.SLIENT_tpwOn=false; _G.SLIENT_tpwSpd=SAVE.tpwSpeed; local tpwConn
     local function startTPW()
         if tpwConn then tpwConn:Disconnect() end
-        tpwConn=TC(RunSvc.RenderStepped:Connect(function(dt)
+        tpwConn=TC(RunSvc.Heartbeat:Connect(function()
             if not _G.SLIENT_tpwOn then return end
             local ch=lp.Character; if not ch then return end
-            local hrp=ch:FindFirstChild("HumanoidRootPart"); local hum=ch:FindFirstChildWhichIsA("Humanoid")
-            if not (hrp and hum and hum.Health>0) then return end
-            local md=hum.MoveDirection; if md.Magnitude<0.01 then return end
-            pcall(function() ch:TranslateBy(md.Unit*_G.SLIENT_tpwSpd*dt*12) end)
+            local hrp=ch:FindFirstChild("HumanoidRootPart")
+            if not hrp then return end
+            local cam=workspace.CurrentCamera
+            local look=cam.CFrame.LookVector*Vector3.new(1,0,1)
+            if look.Magnitude<0.01 then look=Vector3.new(0,0,-1) end
+            local newPos=hrp.Position+look.Unit*_G.SLIENT_tpwSpd
+            hrp.CFrame=CFrame.new(newPos,newPos+look.Unit)
         end))
     end
     
