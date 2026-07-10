@@ -101,6 +101,8 @@ SAVE.safeX        = SAVE.safeX        or 0
 SAVE.safeY        = SAVE.safeY        or 100
 SAVE.safeZ        = SAVE.safeZ        or 0
 SAVE.flySpeed     = SAVE.flySpeed     or 80
+SAVE.customFOV    = SAVE.customFOV    or 70
+SAVE.loopJumpSpd  = SAVE.loopJumpSpd  or 0.15
 SAVE.tpHitTarget  = SAVE.tpHitTarget  or ""
 SAVE.tpHitRange   = SAVE.tpHitRange   or 35
 SAVE.phrases      = SAVE.phrases      or "Slient ON TOP!"
@@ -501,9 +503,18 @@ local WW,WH = 760,580
 local Win = Instance.new("Frame",GUI)
 Win.Name="Slient_Main"; Win.Size=UDim2.new(0,WW,0,WH)
 Win.Position=UDim2.new(0.5,-WW/2,0.5,-WH/2)
-Win.BackgroundColor3=T.BG; Win.BackgroundTransparency=0.02
+Win.BackgroundColor3=T.BG; Win.BackgroundTransparency=0.06
 Win.BorderSizePixel=0; Win.ClipsDescendants=true; Win.ZIndex=10
 Cnr(Win,16); Strk(Win,T.BORDER,1.4,0.25)
+Win.Visible=false
+
+local WinShadow=Instance.new("ImageLabel",GUI)
+WinShadow.Name="Slient_Shadow"; WinShadow.Size=UDim2.new(0,WW+20,0,WH+20)
+WinShadow.Position=UDim2.new(0.5,-(WW+20)/2,0.5,-(WH+20)/2)
+WinShadow.BackgroundTransparency=1; WinShadow.Image="rbxassetid://168892446"
+WinShadow.ImageColor3=Color3.fromRGB(0,0,0); WinShadow.ImageTransparency=0.6
+WinShadow.ScaleType=Enum.ScaleType.Slice; WinShadow.SliceCenter=Rect.new(10,10,118,118)
+WinShadow.ZIndex=9; WinShadow.Visible=false
 
 local Header=Instance.new("Frame",Win)
 Header.Size=UDim2.new(1,0,0,52); Header.BackgroundTransparency=1; Header.BorderSizePixel=0; Header.ZIndex=14
@@ -515,6 +526,22 @@ MkLabel(logo,{text="S",size=16,color=T.ACCENT,font=Bold,sz=UDim2.new(1,0,1,0),xa
 local TitleLbl=MkLabel(Header,{text="SLIENT",size=16,color=T.TEXT,font=Bold,sz=UDim2.new(0,140,0,22),pos=UDim2.new(0,56,0,12),z=14})
 local VersionLbl=MkLabel(Header,{text="V5 - w love by Slient 🖤",size=8,color=T.ACCENT,font=Reg,sz=UDim2.new(0,200,0,12),pos=UDim2.new(0,56,0,34),z=14})
 
+local InfoBar=Instance.new("Frame",Header)
+InfoBar.Size=UDim2.new(0,240,0,32); InfoBar.Position=UDim2.new(1,-290,0.5,-16)
+InfoBar.BackgroundColor3=T.RAISED; InfoBar.BackgroundTransparency=0.15; InfoBar.BorderSizePixel=0; InfoBar.ZIndex=14; Cnr(InfoBar,8)
+local fpsLbl=MkLabel(InfoBar,{text="FPS: 0",size=12,color=T.ACCENT,font=Bold,sz=UDim2.new(0,70,1,0),pos=UDim2.new(0,8,0,0),xa=Enum.TextXAlignment.Left,z=15})
+local plyLbl=MkLabel(InfoBar,{text="Players: 0",size=12,color=T.TEXT,font=Semi,sz=UDim2.new(0,80,1,0),pos=UDim2.new(0,78,0,0),xa=Enum.TextXAlignment.Left,z=15})
+local pingLbl=MkLabel(InfoBar,{text="Ping: 0ms",size=12,color=T.MUTED,font=Reg,sz=UDim2.new(0,70,1,0),pos=UDim2.new(0,162,0,0),xa=Enum.TextXAlignment.Left,z=15})
+local _fpsFrames=0; local _fpsTime=0; local _fpsVal=0
+TC(RunSvc.RenderStepped:Connect(function(dt)
+    _fpsFrames=_fpsFrames+1; _fpsTime=_fpsTime+dt
+    if _fpsTime>=0.5 then
+        _fpsVal=math.round(_fpsFrames/_fpsTime); _fpsFrames=0; _fpsTime=0
+        fpsLbl.Text="FPS: ".._fpsVal; plyLbl.Text="Players: "..#Players:GetPlayers()
+        pingLbl.Text="Ping: "..math.floor(lp:GetNetworkPing()*1000).."ms"
+    end
+end))
+
 local hdrHue=0
 TC(RunSvc.RenderStepped:Connect(function(dt) hdrHue=(hdrHue+dt*0.3)%1; TitleLbl.TextColor3=Color3.fromHSV(hdrHue,0.8,1) end))
 
@@ -525,7 +552,7 @@ CloseBtn.FontFace=Bold; CloseBtn.TextSize=16; CloseBtn.TextColor3=T.MUTED
 CloseBtn.AutoButtonColor=false; CloseBtn.BorderSizePixel=0; CloseBtn.ZIndex=15; Cnr(CloseBtn,8)
 CloseBtn.MouseEnter:Connect(function() Tw(CloseBtn,{BackgroundColor3=T.ERR,TextColor3=T.TEXT},0.14) end)
 CloseBtn.MouseLeave:Connect(function() Tw(CloseBtn,{BackgroundColor3=T.RAISED,TextColor3=T.MUTED},0.14) end)
-CloseBtn.MouseButton1Click:Connect(function() Win.Visible=false end)
+    CloseBtn.MouseButton1Click:Connect(function() Tw(Win,{Size=UDim2.new(0,WW*0.8,0,WH*0.8),BackgroundTransparency=1},0.15); task.delay(0.15,function() Win.Visible=false; WinShadow.Visible=false; Win.Size=UDim2.new(0,WW,0,WH); Win.BackgroundTransparency=0.06 end) end)
 
 local HDiv=Instance.new("Frame",Win)
 HDiv.Size=UDim2.new(1,0,0,1); HDiv.Position=UDim2.new(0,0,0,52)
@@ -595,6 +622,7 @@ for i,t in ipairs(TABS) do
     local btn=Instance.new("TextButton",Sidebar)
     btn.Size=UDim2.new(1,0,0,38); btn.BackgroundColor3=T.CARD; btn.BackgroundTransparency=1
     btn.Text=""; btn.AutoButtonColor=false; btn.BorderSizePixel=0; btn.LayoutOrder=i; btn.ZIndex=15; Cnr(btn,7)
+    Strk(btn,T.ACCENT,1,0)
     
     local bar=Instance.new("Frame",btn); bar.Size=UDim2.new(0,3,0,20); bar.Position=UDim2.new(0,0,0.5,-10)
     bar.BackgroundColor3=T.ACCENT; bar.BackgroundTransparency=1; bar.BorderSizePixel=0; Cnr(bar,2)
@@ -626,8 +654,12 @@ local function GoTab(idx)
     
     for i,tb in ipairs(tabBtns) do
         local a=(i==idx)
-        Tw(tb.btn,{BackgroundTransparency=a and 0.05 or 1,BackgroundColor3=a and T.CARD or T.BG},0.16)
+        Tw(tb.btn,{BackgroundTransparency=a and 0.08 or 1,BackgroundColor3=a and T.CARD or T.BG},0.16)
         Tw(tb.nl,{TextColor3=a and T.TEXT or T.MUTED},0.16)
+        Tw(tb.ic,{TextColor3=a and T.ACCENT or T.DIM},0.16)
+        Tw(tb.bar,{BackgroundTransparency=a and 0 or 1},0.16)
+        local st=tb.btn:FindFirstChildOfClass("UIStroke")
+        if st then Tw(st,{Transparency=a and 0.8 or 1},0.16) end
         Tw(tb.ic,{TextColor3=a and T.ACCENT or T.DIM},0.16)
         Tw(tb.bar,{BackgroundTransparency=a and 0 or 1},0.2)
     end
@@ -677,8 +709,13 @@ do
 end
 
 local function toggleUI()
-    Win.Visible=not Win.Visible
-    if Win.Visible and not activeTab then GoTab(1) end
+    Win.Visible=not Win.Visible; WinShadow.Visible=Win.Visible
+    if Win.Visible then
+        Win.Size=UDim2.new(0,WW*0.85,0,WH*0.85); Win.BackgroundTransparency=0.15
+        Tw(Win,{Size=UDim2.new(0,WW,0,WH),BackgroundTransparency=0.06},0.18)
+        local s=WinShadow; s.Size=UDim2.new(0,WW*0.85+20,0,WH*0.85+20); s.ImageTransparency=0.8
+        Tw(s,{Size=UDim2.new(0,WW+20,0,WH+20),ImageTransparency=0.6},0.18)
+    end
 end
 
 do
@@ -1714,6 +1751,35 @@ do
             Notif("Fake Lag","Blink active","ok")
         end,
         function() if fl3Conn then fl3Conn:Disconnect();fl3Conn=nil end; Notif("Fake Lag","Off","") end)
+
+    MkSep(P,"Invisible",70)
+    local cInvisOn=false; local cInvisConn
+    local function startCInvis()
+        if cInvisConn then cInvisConn:Disconnect() end
+        cInvisConn=TC(RunSvc.Heartbeat:Connect(function()
+            if not cInvisOn then return end
+            local c=lp.Character; if not c then return end
+            for _,v in ipairs(c:GetDescendants()) do
+                if v:IsA("BasePart") then v.Transparency=1
+                elseif v:IsA("Decal") or v:IsA("Texture") then v.Transparency=1 end
+            end
+        end))
+    end
+    local function stopCInvis()
+        if cInvisConn then cInvisConn:Disconnect(); cInvisConn=nil end
+        local c=lp.Character; if not c then return end
+        for _,v in ipairs(c:GetDescendants()) do
+            if v:IsA("BasePart") then v.Transparency=0
+            elseif v:IsA("Decal") or v:IsA("Texture") then v.Transparency=0 end
+        end
+    end
+    MkToggle(P,"INVISIBLE",71,
+        function() cInvisOn=true; startCInvis(); Notif("Invisible","Active","ok") end,
+        function() cInvisOn=false; stopCInvis(); Notif("Invisible","Off","") end)
+    RegKB("CInvisible",Enum.KeyCode.B,function()
+        cInvisOn=not cInvisOn
+        if cInvisOn then startCInvis(); Notif("Invisible","Active","ok") else stopCInvis(); Notif("Invisible","Off","") end
+    end)
 end
 
 -- ═══════════════════════════════════════
@@ -1915,6 +1981,51 @@ do
         Tw(phS,{Transparency=0.4,Color=T.BORDER},0.14)
         SAVE.phrases=phBox.Text; parseUserPhrases(SAVE.phrases); task.delay(.5,DoSave)
     end)
+
+    MkSep(P,"Cosmetics",8)
+    local chinaHatOn=false; local chinaHatObj
+    local function spawnChinaHat()
+        if chinaHatObj then pcall(function() chinaHatObj:Destroy() end) end
+        local c=lp.Character; if not c then return end
+        local head=c:FindFirstChild("Head"); if not head then return end
+        local hat=Instance.new("Part")
+        hat.Name="SlientChinaHat"; hat.Size=Vector3.new(8,0.4,8); hat.Shape=Enum.PartType.Cylinder
+        hat.Anchored=false; hat.CanCollide=false; hat.Material=Enum.Material.Neon
+        hat.Color=Color3.fromRGB(200,50,50); hat.BrickColor=BrickColor.new("Bright red")
+        local wedge=Instance.new("SpecialMesh",hat); wedge.MeshType=Enum.MeshType.Wedge
+        wedge.Scale=Vector3.new(1,0.4,1); hat.Parent=workspace
+        local weld=Instance.new("WeldConstraint",hat)
+        weld.Part0=hat; weld.Part1=head
+        chinaHatObj=hat
+    end
+    local function removeChinaHat()
+        if chinaHatObj then pcall(function() chinaHatObj:Destroy() end); chinaHatObj=nil end
+    end
+    MkToggle(P,"CHINA HAT",9,
+        function() chinaHatOn=true; spawnChinaHat(); Notif("Hat","China hat on!","ok") end,
+        function() chinaHatOn=false; removeChinaHat(); Notif("Hat","China hat off","") end)
+    lp.CharacterAdded:Connect(function()
+        if chinaHatOn then task.wait(1); spawnChinaHat() end
+    end)
+
+    local purpleSkyOn=false
+    local function setPurpleSky()
+        local l=Lighting
+        l.Ambient=Color3.fromRGB(60,0,80); l.Brightness=0.5
+        l.OutdoorAmbient=Color3.fromRGB(80,0,100); l.ColorShift_Top=Color3.fromRGB(120,0,180)
+        l.ColorShift_Bottom=Color3.fromRGB(30,0,40)
+        pcall(function() l:SetAttribute("SlientPurpleSky",true) end)
+    end
+    local function resetSky()
+        local l=Lighting
+        l.Ambient=Color3.fromRGB(128,128,128); l.Brightness=1
+        l.OutdoorAmbient=Color3.fromRGB(128,128,128); l.ColorShift_Top=Color3.fromRGB(255,255,255)
+        l.ColorShift_Bottom=Color3.fromRGB(0,0,0)
+        pcall(function() l:SetAttribute("SlientPurpleSky",nil) end)
+    end
+    MkToggle(P,"PURPLE SKY",10,
+        function() purpleSkyOn=true; setPurpleSky(); Notif("Sky","Purple sky active","ok") end,
+        function() purpleSkyOn=false; resetSky(); Notif("Sky","Sky reset","") end)
 end
 
 -- ═══════════════════════════════════════
@@ -2692,7 +2803,44 @@ do
     local rwBtn=MkBtn(rwCard,{bg=T.RAISED,text="RESET WINDOW POSITION",size=9,color=T.TEXT,sz=UDim2.new(1,-28,0,24),pos=UDim2.new(0,14,0,8),corner=6,bgt=0.1,z=15})
     rwBtn.MouseButton1Click:Connect(function() Win.Position=UDim2.new(0.5,-WW/2,0.5,-WH/2); Notif("Window","Reset","ok") end)
     
-    MkSep(P,"Keybinds",3)
+    local fovOn=false; local _fovReset
+    MkToggle(P,"CUSTOM FOV",3,
+        function()
+            fovOn=true
+            local cam=workspace.CurrentCamera
+            _fovReset=cam.FieldOfView
+            cam.FieldOfView=SAVE.customFOV
+            Notif("FOV","Custom FOV active","ok")
+        end,
+        function()
+            fovOn=false
+            local cam=workspace.CurrentCamera
+            if _fovReset then cam.FieldOfView=_fovReset end
+            Notif("FOV","Default restored","")
+        end)
+    MkSlider(P,"FOV VALUE",20,120,SAVE.customFOV,4,function(v)
+        SAVE.customFOV=v; task.delay(.5,DoSave)
+        if fovOn then workspace.CurrentCamera.FieldOfView=v end
+    end)
+
+    local loopJumpOn=false; local _ljConn
+    local function startLoopJump()
+        if _ljConn then _ljConn:Disconnect() end
+        _ljConn=TC(RunSvc.Heartbeat:Connect(function()
+            if not loopJumpOn then return end
+            local c=lp.Character; if not c then return end
+            local hum=c:FindFirstChildOfClass("Humanoid")
+            if hum and hum.Health>0 then
+                local uis=UserInputService
+                if uis:IsKeyDown(Enum.KeyCode.Space) then hum.Jump=true end
+            end
+        end))
+    end
+    MkToggle(P,"LOOP JUMP (hold space)",5,
+        function() loopJumpOn=true; startLoopJump(); Notif("Loop Jump","Active","ok") end,
+        function() loopJumpOn=false; if _ljConn then _ljConn:Disconnect();_ljConn=nil end; Notif("Loop Jump","Off","") end)
+    
+    MkSep(P,"Keybinds",6)
     local kbCard=MkCard(P,240,4)
     MkLabel(kbCard,{text="CLICK BIND THEN PRESS KEY",size=7,color=T.DIM,font=Bold,sz=UDim2.new(1,-28,0,10),pos=UDim2.new(0,14,0,7),z=14})
     local kbSF=Instance.new("ScrollingFrame",kbCard); kbSF.Size=UDim2.new(1,-24,0,216); kbSF.Position=UDim2.new(0,12,0,20)
@@ -3242,6 +3390,7 @@ end
 
 print("✓ Slient starting...")
 
+WinShadow.Visible=true
 Win.Visible=true
 GoTab(1)
 
