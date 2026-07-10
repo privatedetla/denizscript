@@ -228,7 +228,7 @@ end
 -- NOTIFICATIONS
 -- ════════════════════════════════════════════════════════════
 local NotifHolder=Instance.new("Frame",GUI)
-NotifHolder.Size=UDim2.new(0,320,0,0); NotifHolder.Position=UDim2.new(0,8,1,-12)
+NotifHolder.Size=UDim2.new(0,340,0,0); NotifHolder.Position=UDim2.new(0,8,1,-12)
 NotifHolder.BackgroundTransparency=1; NotifHolder.BorderSizePixel=0; NotifHolder.ZIndex=9000; NotifHolder.AutomaticSize=Enum.AutomaticSize.Y
 
 local function Notif(title,body,ntype)
@@ -274,7 +274,7 @@ end))
 -- ════════════════════════════════════════════════════════════
 local function MkCard(parent,h,order)
     local f=Instance.new("Frame",parent)
-    f.Size=UDim2.new(1,0,0,h); f.BackgroundColor3=T.BG; f.BorderSizePixel=1; f.BorderColor3=T.RAISED; f.ZIndex=13
+    f.Size=UDim2.new(1,0,0,h); f.BackgroundColor3=Color3.fromRGB(0,5,0); f.BorderSizePixel=1; f.BorderColor3=Color3.fromRGB(0,50,0); f.ZIndex=13
     if order then f.LayoutOrder=order end
     return f
 end
@@ -384,10 +384,10 @@ local Win = Instance.new("Frame",GUI)
 Win.Name="SLIENT_Main"; Win.Size=UDim2.new(0,WW,0,WH)
 Win.Position=UDim2.new(0.5,-WW/2,0.5,-WH/2)
 Win.BackgroundColor3=T.BG; Win.BackgroundTransparency=0
-Win.BorderSizePixel=1; Win.BorderColor3=T.BORDER; Win.ClipsDescendants=true; Win.ZIndex=10
+Win.BorderSizePixel=1; Win.BorderColor3=Color3.fromRGB(0,80,0); Win.ClipsDescendants=true; Win.ZIndex=10
 
 local Header=Instance.new("Frame",Win)
-Header.Size=UDim2.new(1,0,0,40); Header.BackgroundColor3=T.BG; Header.BorderSizePixel=0; Header.ZIndex=14
+Header.Size=UDim2.new(1,0,0,40); Header.BackgroundColor3=Color3.fromRGB(0,5,0); Header.BorderSizePixel=1; Header.BorderColor3=Color3.fromRGB(0,40,0); Header.ZIndex=14
 
 MkLabel(Header,{text="SLIENT v1.4.2",size=13,color=T.ACCENT,font=Reg,sz=UDim2.new(0,160,0,16),pos=UDim2.new(0,10,0,4),z=14})
 MkLabel(Header,{text="[system ready]",size=8,color=T.MUTED,font=Reg,sz=UDim2.new(0,160,0,12),pos=UDim2.new(0,10,0,22),z=14})
@@ -424,13 +424,13 @@ local BODY_Y=40; local SIDE_W=120
 
 local Sidebar=Instance.new("ScrollingFrame",Win)
 Sidebar.Size=UDim2.new(0,SIDE_W,0,WH-BODY_Y); Sidebar.Position=UDim2.new(0,0,0,BODY_Y)
-Sidebar.BackgroundColor3=T.BG; Sidebar.BackgroundTransparency=0; Sidebar.BorderSizePixel=0; Sidebar.ScrollBarThickness=2
+Sidebar.BackgroundColor3=Color3.fromRGB(0,5,0); Sidebar.BackgroundTransparency=0; Sidebar.BorderSizePixel=1; Sidebar.BorderColor3=Color3.fromRGB(0,40,0); Sidebar.ScrollBarThickness=2
 Sidebar.ScrollBarImageColor3=T.DIM; Sidebar.AutomaticCanvasSize=Enum.AutomaticSize.Y
 Sidebar.CanvasSize=UDim2.new(0,0,0,0); Sidebar.ZIndex=14; Sidebar.ClipsDescendants=true
 
 local Content=Instance.new("Frame",Win)
 Content.Size=UDim2.new(0,WW-SIDE_W,0,WH-BODY_Y); Content.Position=UDim2.new(0,SIDE_W,0,BODY_Y)
-Content.BackgroundTransparency=1; Content.BorderSizePixel=0; Content.ClipsDescendants=true; Content.ZIndex=12
+Content.BackgroundColor3=T.BG; Content.BorderSizePixel=0; Content.ClipsDescendants=true; Content.ZIndex=12
 
 -- ════════════════════════════════════════════════════════════
 -- TABS
@@ -460,6 +460,8 @@ for i,t in ipairs(TABS) do
     btn.Text="  "..t.n; btn.TextColor3=T.MUTED; btn.TextSize=10; btn.Font=Reg
     btn.AutoButtonColor=false; btn.BorderSizePixel=0; btn.LayoutOrder=i; btn.ZIndex=15
     btn.TextXAlignment=Enum.TextXAlignment.Left
+    btn.MouseEnter:Connect(function() if activeTab~=i then btn.TextColor3=Color3.fromRGB(0,200,0) end end)
+    btn.MouseLeave:Connect(function() if activeTab~=i then btn.TextColor3=T.MUTED end end)
     
     local panel=Instance.new("ScrollingFrame",Content)
     panel.Size=UDim2.new(1,0,1,0); panel.BackgroundTransparency=1
