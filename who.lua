@@ -1923,28 +1923,27 @@ end
 do
     local P=tabPanels[4]
     
-    _G.SLIENT_tpwOn=false; _G.SLIENT_tpwSpd=SAVE.tpwSpeed; local tpwConn
+    _G.SLIENT_tpwOn=false; _G.SLIENT_tpwSpd=SAVE.tpwSpeed; local tpwConn; local tpwStack=0
     local function startTPW()
         if tpwConn then tpwConn:Disconnect() end
-        tpwConn=TC(RunSvc.Heartbeat:Connect(function()
+        tpwConn=TC(RunSvc.Heartbeat:Connect(function(dt)
             if not _G.SLIENT_tpwOn then return end
             local ch=lp.Character; if not ch then return end
-            local hrp=ch:FindFirstChild("HumanoidRootPart")
-            if not hrp then return end
-            local cam=workspace.CurrentCamera
-            local look=cam.CFrame.LookVector*Vector3.new(1,0,1)
-            if look.Magnitude<0.01 then look=Vector3.new(0,0,-1) end
-            local newPos=hrp.Position+look.Unit*_G.SLIENT_tpwSpd
-            hrp.CFrame=CFrame.new(newPos,newPos+look.Unit)
+            local hum=ch:FindFirstChildWhichIsA("Humanoid")
+            if not (hum and hum.Health>0) then return end
+            local md=hum.MoveDirection
+            if md.Magnitude>0.01 then
+                ch:TranslateBy(md*(_G.SLIENT_tpwSpd+tpwStack)*dt*10)
+            end
         end))
     end
     
     local _,_,tpwSet=MkToggle(P,"TPWALK",1,
         function() _G.SLIENT_tpwOn=true; startTPW(); Notif("TPWalk","Active","ok") end,
-        function() _G.SLIENT_tpwOn=false; if tpwConn then tpwConn:Disconnect();tpwConn=nil end; Notif("TPWalk","Off","") end)
+        function() _G.SLIENT_tpwOn=false; tpwStack=0; if tpwConn then tpwConn:Disconnect();tpwConn=nil end; Notif("TPWalk","Off","") end)
     RegKB("TPWalk",Enum.KeyCode.T,function()
         _G.SLIENT_tpwOn=not _G.SLIENT_tpwOn; tpwSet(_G.SLIENT_tpwOn)
-        if _G.SLIENT_tpwOn then startTPW(); Notif("TPWalk","Active","ok") else if tpwConn then tpwConn:Disconnect();tpwConn=nil end; Notif("TPWalk","Off","") end
+        if _G.SLIENT_tpwOn then startTPW(); Notif("TPWalk","Active","ok") else tpwStack=0; if tpwConn then tpwConn:Disconnect();tpwConn=nil end; Notif("TPWalk","Off","") end
     end)
     
     MkSlider(P,"TPWALK SPEED",1,80,SAVE.tpwSpeed,2,function(v) _G.SLIENT_tpwSpd=v; SAVE.tpwSpeed=v; task.delay(.5,DoSave) end)
