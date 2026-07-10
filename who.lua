@@ -605,7 +605,6 @@ local TABS={
     {n="RP Color",i="🌈"},
     {n="Movement",i="🚀"},
     {n="Targets", i="🎯"},
-    {n="Ghost",   i="👻"},
     {n="Glitch",  i="⚡"},
     {n="Headless",i="😵"},
     {n="Spin",    i="🌀"},
@@ -1780,6 +1779,93 @@ do
         cInvisOn=not cInvisOn
         if cInvisOn then startCInvis(); Notif("Invisible","Active","ok") else stopCInvis(); Notif("Invisible","Off","") end
     end)
+
+    MkSep(P,"Work Mode",72)
+    local wmOn=false; local wmDecoy=nil; local wmConn=nil; local wmDied=nil; local wmPlat=nil
+    local WM_PLATFORM_POS=Vector3.new(0,10000,0)
+    wmPlat=Instance.new("Part"); wmPlat.Size=Vector3.new(750,1,750); wmPlat.Anchored=true; wmPlat.CanCollide=true; wmPlat.Transparency=1; wmPlat.Parent=workspace; wmPlat.CFrame=CFrame.new(WM_PLATFORM_POS)
+    local function wmGetJoints(m) local t={}; for _,v in ipairs(m:GetDescendants()) do if v:IsA("Motor6D") then t[v.Name]=v end end; return t end
+    local function wmHideChar(char,h) for _,v in ipairs(char:GetDescendants()) do if v:IsA("BasePart") then v.LocalTransparencyModifier=h and 1 or 0; if v.Name=="HumanoidRootPart" then v.Transparency=1 end elseif v:IsA("Decal") or v:IsA("Texture") then v.Transparency=h and 1 or 0 end end end
+    local function wmIsDead(hum) if not hum then return true end; local s=hum:GetState(); return hum.Health<=0 or hum.PlatformStand or s==Enum.HumanoidStateType.Ragdoll or s==Enum.HumanoidStateType.FallingDown or s==Enum.HumanoidStateType.Dead end
+    local function stopWM(noTP)
+        if not wmOn then return end; wmOn=false
+        if wmConn then wmConn:Disconnect(); wmConn=nil end; if wmDied then wmDied:Disconnect(); wmDied=nil end
+        local c=lp.Character
+        if c then
+            wmHideChar(c,false)
+            local hrp=c:FindFirstChild("HumanoidRootPart"); local hum=c:FindFirstChildOfClass("Humanoid")
+            if hum then hum.PlatformStand=false; hum.AutoRotate=true end
+            if hrp and wmDecoy and wmDecoy.Parent and not noTP then
+                local dHRP=wmDecoy:FindFirstChild("HumanoidRootPart")
+                if dHRP and hum and not wmIsDead(hum) then
+                    task.wait(); if hrp and dHRP and hum and not wmIsDead(hum) then hrp.CFrame=dHRP.CFrame+Vector3.new(0,2,0); hrp.AssemblyLinearVelocity=Vector3.zero; hrp.AssemblyAngularVelocity=Vector3.zero end
+                end; hrp.Anchored=false
+            end; workspace.CurrentCamera.CameraSubject=hum or c
+        end
+        if wmDecoy then wmDecoy:Destroy(); wmDecoy=nil end
+    end
+    local function startWM()
+        if wmOn then return end
+        local c=lp.Character; if not c then return end
+        local hrp=c:FindFirstChild("HumanoidRootPart"); local hum=c:FindFirstChildOfClass("Humanoid")
+        if not hrp or not hum then return end
+        if wmDied then wmDied:Disconnect() end; c.Archivable=true
+        local clone=c:Clone(); c.Archivable=false; clone.Name="WorkDecoy"
+        for _,v in ipairs(clone:GetDescendants()) do if v:IsA("BaseScript") then v:Destroy() end end
+        for _,v in ipairs(clone:GetDescendants()) do
+            if v:IsA("BasePart") then v.CanCollide=true; v.Massless=false; v.Transparency=v.Name~="HumanoidRootPart" and 0.5 or 1
+            elseif v:IsA("Accessory") then for _,p in ipairs(v:GetDescendants()) do if p:IsA("BasePart") then p.Transparency=0.5; p.CanCollide=false; p.Massless=false end end end
+        end
+        local cHum=clone:FindFirstChildOfClass("Humanoid"); local dHRP=clone:FindFirstChild("HumanoidRootPart")
+        if not cHum or not dHRP then clone:Destroy(); return end
+        cHum.DisplayDistanceType=Enum.HumanoidDisplayDistanceType.None; cHum.PlatformStand=false; cHum.AutoRotate=true
+        local anim=cHum:FindFirstChildOfClass("Animator"); if anim then anim:Destroy() end
+        dHRP.CFrame=hrp.CFrame; clone.Parent=workspace
+        local bp=lp:FindFirstChildOfClass("Backpack")
+        if bp then for _,t in ipairs(bp:GetChildren()) do if t:IsA("Tool") then t:Clone().Parent=clone end end end
+        for _,t in ipairs(c:GetChildren()) do if t:IsA("Tool") then t:Clone().Parent=clone end end
+        wmDecoy=clone; wmOn=true; wmHideChar(c,true)
+        hrp.CFrame=CFrame.new(WM_PLATFORM_POS+Vector3.new(0,5,0)); hrp.AssemblyLinearVelocity=Vector3.zero; workspace.CurrentCamera.CameraSubject=dHRP
+        wmDied=hum.Died:Connect(function() stopWM(true); if wmSet then wmSet(false) end end)
+        local bv=Instance.new("BodyVelocity"); bv.MaxForce=Vector3.new(1e5,1e5,1e5); bv.Velocity=Vector3.zero
+        local bg=Instance.new("BodyGyro"); bg.MaxTorque=Vector3.new(1e5,1e5,1e5)
+        local rJ=wmGetJoints(c); local fJ=wmGetJoints(clone)
+        wmConn=TC(RunSvc.Heartbeat:Connect(function(dt)
+            if not wmOn or not wmDecoy or not wmDecoy.Parent then stopWM(); return end
+            if UIS:GetFocusedTextBox() then for n,real in pairs(rJ) do local f=fJ[n]; if f then f.Transform=real.Transform end end; return end
+            local mv=Vector3.zero; local cam=workspace.CurrentCamera
+            if UIS:IsKeyDown(Enum.KeyCode.W) then mv=mv+cam.CFrame.LookVector end
+            if UIS:IsKeyDown(Enum.KeyCode.S) then mv=mv-cam.CFrame.LookVector end
+            if UIS:IsKeyDown(Enum.KeyCode.A) then mv=mv-cam.CFrame.RightVector end
+            if UIS:IsKeyDown(Enum.KeyCode.D) then mv=mv+cam.CFrame.RightVector end
+            local md=Vector3.new(mv.X,0,mv.Z); if md.Magnitude>0 then md=md.Unit end
+            hum:Move(md,false); cHum:Move(md,false)
+            if UIS:IsKeyDown(Enum.KeyCode.Space) then hum.Jump=true; cHum.Jump=true end
+            if _G.SLIENT_flyOn then
+                cHum.PlatformStand=true; bv.Parent=dHRP; bg.Parent=dHRP; local fl=mv
+                if UIS:IsKeyDown(Enum.KeyCode.Space) then fl=fl+Vector3.new(0,1,0) end
+                if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then fl=fl-Vector3.new(0,1,0) end
+                bv.Velocity=fl.Magnitude>0 and fl.Unit*_G.SLIENT_flySpd or Vector3.zero; bg.CFrame=cam.CFrame
+            elseif isTPW then
+                cHum.PlatformStand=false; bv.Parent=nil; bg.Parent=nil; local md2=cHum.MoveDirection
+                if md2.Magnitude>0 then clone:TranslateBy(md2.Unit*_G.SLIENT_tpwSpd*dt*12) end
+            else cHum.PlatformStand=false; bv.Parent=nil; bg.Parent=nil end
+            if UIS.MouseBehavior==Enum.MouseBehavior.LockCenter then
+                local lk=cam.CFrame.LookVector; lk=Vector3.new(lk.X,0,lk.Z)
+                if lk.Magnitude>0 then dHRP.CFrame=CFrame.new(dHRP.Position,dHRP.Position+lk) end
+            end
+            for n,real in pairs(rJ) do local f=fJ[n]; if f then f.Transform=real.Transform end end
+        end))
+    end
+    local wmSet
+    local _,_,wmSet=MkToggle(P,"WORK MODE",73,
+        function() startWM(); Notif("Work Mode","Active","ok") end,
+        function() stopWM(); Notif("Work Mode","Off","") end)
+    RegKB("WorkMode",Enum.KeyCode.Q,function()
+        if wmOn then stopWM(); wmSet(false) else startWM(); wmSet(true) end
+    end)
+    lp.CharacterAdded:Connect(function() task.wait(0.5); if wmOn then stopWM(true); wmSet(false) end end)
+    lp.CharacterRemoving:Connect(function() if wmOn then stopWM(true); wmSet(false) end end)
 end
 
 -- ═══════════════════════════════════════
@@ -2211,409 +2297,11 @@ do
 end
 
 -- ═══════════════════════════════════════
--- TAB 6: GHOST
--- ═══════════════════════════════════════
-    do
-        local P = tabPanels[6]
-        local ghostOn = false
-        local _ghostDecoy = nil
-        local _ghostConn = nil
-        local _diedConn = nil
-        local GHOST_PLATFORM_POS = Vector3.new(0, 10000, 0)
-
-        local RunService = game:GetService("RunService")
-        local UIS = game:GetService("UserInputService")
-        local Players = game:GetService("Players")
-        local lp = Players.LocalPlayer
-
-        _G.SLIENT_flyOn = _G.SLIENT_flyOn or false
-        _G.SLIENT_flySpd = _G.SLIENT_flySpd or 50
-        _G.SLIENT_tpwOn = _G.SLIENT_tpwOn or false
-        _G.SLIENT_tpwSpd = _G.SLIENT_tpwSpd or 50
-
-        local ghostPlatform = Instance.new("Part")
-        ghostPlatform.Name = "GhostPlatform"
-        ghostPlatform.Size = Vector3.new(750, 1, 750)
-        ghostPlatform.Anchored = true
-        ghostPlatform.CanCollide = true
-        ghostPlatform.Transparency = 1
-        ghostPlatform.Parent = workspace
-        ghostPlatform.CFrame = CFrame.new(GHOST_PLATFORM_POS)
-
-        local function getJoints(model)
-            local t = {}
-            for _, v in ipairs(model:GetDescendants()) do
-                if v:IsA("Motor6D") then
-                    t[v.Name] = v
-                end
-            end
-            return t
-        end
-
-        local function setLocalHidden(char, hidden)
-            for _, v in ipairs(char:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    v.LocalTransparencyModifier = hidden and 1 or 0
-                    if v.Name == "HumanoidRootPart" then
-                        v.Transparency = 1
-                    end
-                elseif v:IsA("Decal") or v:IsA("Texture") then
-                    v.Transparency = hidden and 1 or 0
-                end
-            end
-        end
-
-        local function isShiftLock()
-            return UIS.MouseBehavior == Enum.MouseBehavior.LockCenter
-        end
-
-        local function isChatting()
-            return UIS:GetFocusedTextBox() ~= nil
-        end
-
-        local _stopping = false
-        local _emoteMirror = {}
-
-        local function isRagdolledOrDead(hum)
-            if not hum then return true end
-            local state = hum:GetState()
-            return hum.Health <= 0 or 
-                hum.PlatformStand or 
-                state == Enum.HumanoidStateType.Ragdoll or 
-                state == Enum.HumanoidStateType.FallingDown or 
-                state == Enum.HumanoidStateType.Dead
-        end
-
-        local function stopGhost(forceNoTeleport)
-            if _stopping or not ghostOn then return end
-            _stopping = true
-            ghostOn = false
-
-            if _ghostConn then _ghostConn:Disconnect(); _ghostConn = nil end
-            if _diedConn then _diedConn:Disconnect(); _diedConn = nil end
-
-            for _, decoyTrack in pairs(_emoteMirror) do
-                pcall(function() decoyTrack:Stop() end)
-            end
-            table.clear(_emoteMirror)
-
-            local char = lp.Character
-            if char then
-                setLocalHidden(char, false)
-
-                local hrp = char:FindFirstChild("HumanoidRootPart")
-                local hum = char:FindFirstChildOfClass("Humanoid")
-
-                if hum then
-                    hum.PlatformStand = false
-                    hum.AutoRotate = true
-                end
-
-                if hrp and _ghostDecoy and _ghostDecoy.Parent and not forceNoTeleport then
-                    local decoyHRP = _ghostDecoy:FindFirstChild("HumanoidRootPart")
-                    if decoyHRP and hum and not isRagdolledOrDead(hum) then
-                        task.wait()
-                        if hrp and decoyHRP and hum and not isRagdolledOrDead(hum) then
-                            hrp.CFrame = decoyHRP.CFrame + Vector3.new(0, 2, 0)
-                            hrp.AssemblyLinearVelocity = Vector3.zero
-                            hrp.AssemblyAngularVelocity = Vector3.zero
-                        end
-                    end
-                    hrp.Anchored = false
-                end
-
-                workspace.CurrentCamera.CameraSubject = hum or char
-            end
-
-            if _ghostDecoy then
-                _ghostDecoy:Destroy()
-                _ghostDecoy = nil
-            end
-
-            _stopping = false
-        end
-
-        local function startGhost()
-            if ghostOn then return end
-            local char = lp.Character
-            if not char then return end
-
-            local hrp = char:FindFirstChild("HumanoidRootPart")
-            local hum = char:FindFirstChildOfClass("Humanoid")
-            if not hrp or not hum then return end
-
-            if _diedConn then _diedConn:Disconnect() end
-
-            char.Archivable = true
-            local clone = char:Clone()
-            char.Archivable = false
-
-            clone.Name = "Ghost"
-
-            for _, v in ipairs(clone:GetDescendants()) do
-                if v:IsA("BaseScript") then
-                    v:Destroy()
-                end
-            end
-
-            for _, v in ipairs(clone:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    v.CanCollide = true
-                    v.Massless = false
-                    if v.Name ~= "HumanoidRootPart" then
-                        v.Transparency = 0.5
-                    else
-                        v.Transparency = 1
-                    end
-                elseif v:IsA("Accessory") then
-                    for _, part in ipairs(v:GetDescendants()) do
-                        if part:IsA("BasePart") then
-                            part.Transparency = 0.5
-                            part.CanCollide = false
-                            part.Massless = false
-                        end
-                    end
-                end
-            end
-
-            local cloneHum = clone:FindFirstChildOfClass("Humanoid")
-            local decoyHRP = clone:FindFirstChild("HumanoidRootPart")
-            if not cloneHum or not decoyHRP then
-                clone:Destroy()
-                return
-            end
-
-            cloneHum.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
-            cloneHum.PlatformStand = false
-            cloneHum.AutoRotate = true
-
-            local anim = cloneHum:FindFirstChildOfClass("Animator")
-            if anim then anim:Destroy() end
-
-            decoyHRP.CFrame = hrp.CFrame
-            clone.Parent = workspace
-
-            -- NEW: Clone tools so both real player and ghost can use them
-            local backpack = lp:FindFirstChildOfClass("Backpack")
-            
-            -- Clone tools from Backpack to ghost
-            if backpack then
-                for _, tool in ipairs(backpack:GetChildren()) do
-                    if tool:IsA("Tool") then
-                        local toolClone = tool:Clone()
-                        toolClone.Parent = clone
-                    end
-                end
-            end
-            
-            -- Clone tools that are currently equipped in the real character to ghost
-            for _, tool in ipairs(char:GetChildren()) do
-                if tool:IsA("Tool") then
-                    local toolClone = tool:Clone()
-                    toolClone.Parent = clone
-                end
-            end
-
-            _ghostDecoy = clone
-            ghostOn = true
-
-            setLocalHidden(char, true)
-            hrp.CFrame = CFrame.new(GHOST_PLATFORM_POS + Vector3.new(0, 5, 0))
-            hrp.AssemblyLinearVelocity = Vector3.zero
-
-            workspace.CurrentCamera.CameraSubject = decoyHRP
-
-            -- Died handler
-            _diedConn = hum.Died:Connect(function()
-                stopGhost(true)
-                if _gSet then _gSet(false) end
-            end)
-
-            local bv = Instance.new("BodyVelocity")
-            bv.MaxForce = Vector3.new(1e5, 1e5, 1e5)
-            bv.Velocity = Vector3.zero
-
-            local bg = Instance.new("BodyGyro")
-            bg.MaxTorque = Vector3.new(1e5, 1e5, 1e5)
-
-            local realJoints = getJoints(char)
-            local fakeJoints = getJoints(clone)
-
-            _ghostConn = RunService.Heartbeat:Connect(function(dt)
-                if not ghostOn or not _ghostDecoy or not _ghostDecoy.Parent then
-                    stopGhost()
-                    return
-                end
-
-                -- Skip movement when chatting
-                if isChatting() then
-                    for name, real in pairs(realJoints) do
-                        local fake = fakeJoints[name]
-                        if fake then
-                            fake.Transform = real.Transform
-                        end
-                    end
-                    return
-                end
-
-                -- Normal movement (only when not chatting)
-                local move = Vector3.zero
-                local cam = workspace.CurrentCamera
-
-                if UIS:IsKeyDown(Enum.KeyCode.W) then move += cam.CFrame.LookVector end
-                if UIS:IsKeyDown(Enum.KeyCode.S) then move -= cam.CFrame.LookVector end
-                if UIS:IsKeyDown(Enum.KeyCode.A) then move -= cam.CFrame.RightVector end
-                if UIS:IsKeyDown(Enum.KeyCode.D) then move += cam.CFrame.RightVector end
-
-                local moveDir = Vector3.new(move.X, 0, move.Z)
-                if moveDir.Magnitude > 0 then moveDir = moveDir.Unit end
-
-                hum:Move(moveDir, false)
-                cloneHum:Move(moveDir, false)
-
-                if UIS:IsKeyDown(Enum.KeyCode.Space) then
-                    hum.Jump = true
-                    cloneHum.Jump = true
-                end
-
-                local isFlying = _G.SLIENT_flyOn
-                local isTPW = _G.SLIENT_tpwOn
-
-                if isFlying then
-                    cloneHum.PlatformStand = true
-                    bv.Parent = decoyHRP
-                    bg.Parent = decoyHRP
-
-                    local fly = move
-                    if UIS:IsKeyDown(Enum.KeyCode.Space) then fly += Vector3.new(0, 1, 0) end
-                    if UIS:IsKeyDown(Enum.KeyCode.LeftShift) then fly -= Vector3.new(0, 1, 0) end
-
-                    if fly.Magnitude > 0 then
-                        bv.Velocity = fly.Unit * _G.SLIENT_flySpd
-                    else
-                        bv.Velocity = Vector3.zero
-                    end
-                    bg.CFrame = cam.CFrame
-                elseif isTPW then
-                    cloneHum.PlatformStand = false
-                    bv.Parent = nil
-                    bg.Parent = nil
-                    local md = cloneHum.MoveDirection
-                    if md.Magnitude > 0 then
-                        clone:TranslateBy(md.Unit * _G.SLIENT_tpwSpd * dt * 12)
-                    end
-                else
-                    cloneHum.PlatformStand = false
-                    bv.Parent = nil
-                    bg.Parent = nil
-                end
-
-                if isShiftLock() then
-                    local look = cam.CFrame.LookVector
-                    look = Vector3.new(look.X, 0, look.Z)
-                    if look.Magnitude > 0 then
-                        decoyHRP.CFrame = CFrame.new(decoyHRP.Position, decoyHRP.Position + look)
-                    end
-                end
-
-                -- Sync joints
-                for name, real in pairs(realJoints) do
-                    local fake = fakeJoints[name]
-                    if fake then
-                        fake.Transform = real.Transform
-                    end
-                end
-            end)
-        end
-
-        local _, _, gs = MkToggle(P, "GHOST MODE", 1,
-            function() startGhost() end,
-            function() stopGhost() end
-        )
-        _gSet = gs
-
-        RegKB("Ghost", Enum.KeyCode.Q, function()
-            if ghostOn then
-                stopGhost()
-                _gSet(false)
-            else
-                startGhost()
-                _gSet(true)
-            end
-        end)
-
-        lp.CharacterAdded:Connect(function()
-            task.wait(0.5)
-            if ghostOn then
-                stopGhost(true)
-                _gSet(false)
-            end
-        end)
-
-        lp.CharacterRemoving:Connect(function()
-            if ghostOn then
-                stopGhost(true)
-                _gSet(false)
-            end
-        end)
-
-        MkSep(P,"Invisibility",2)
-
-        local invisOn=false
-        local invisConn
-        local function startInvis()
-            if invisConn then invisConn:Disconnect() end
-            invisConn=TC(RunSvc.Heartbeat:Connect(function()
-                if not invisOn then return end
-                local c=lp.Character; if not c then return end
-                local hrp=c:FindFirstChild("HumanoidRootPart"); local hum=c:FindFirstChildOfClass("Humanoid")
-                if hrp then
-                    local cam=workspace.CurrentCamera
-                    hrp.CFrame=CFrame.new(hrp.Position.X,hrp.Position.Y+0.01,hrp.Position.Z)
-                end
-                for _,v in ipairs(c:GetDescendants()) do
-                    if v:IsA("BasePart") then
-                        if v.Name=="HumanoidRootPart" then
-                            v.Transparency=1
-                        else
-                            v.Transparency=0.5
-                        end
-                    elseif v:IsA("Decal") or v:IsA("Texture") then
-                        v.Transparency=0.5
-                    end
-                end
-            end))
-        end
-        local function stopInvis()
-            if invisConn then invisConn:Disconnect(); invisConn=nil end
-            local c=lp.Character; if not c then return end
-            for _,v in ipairs(c:GetDescendants()) do
-                if v:IsA("BasePart") then
-                    if v.Name=="HumanoidRootPart" then
-                        v.Transparency=1
-                    else
-                        v.Transparency=0
-                    end
-                elseif v:IsA("Decal") or v:IsA("Texture") then
-                    v.Transparency=0
-                end
-            end
-        end
-
-        local _,_,invisSet=MkToggle(P,"INVISIBLE",3,
-            function() invisOn=true; startInvis(); Notif("Invisible","Active","ok") end,
-            function() invisOn=false; stopInvis(); Notif("Invisible","Off","") end)
-
-        RegKB("Invisible",Enum.KeyCode.X,function()
-            invisOn=not invisOn; invisSet(invisOn)
-        end)
-    end
-
 -- ═══════════════════════════════════════
 -- TAB 7: GLITCH
 -- ═══════════════════════════════════════
 do
-    local P=tabPanels[7]
+    local P=tabPanels[6]
     local function setupNoRag(char)
         pcall(function()
             local h=char:WaitForChild("Humanoid",4); if not h then return end
@@ -2697,10 +2385,10 @@ do
 end
 
 -- ═══════════════════════════════════════
--- TAB 8: HEADLESS
+-- TAB 7: HEADLESS
 -- ═══════════════════════════════════════
 do
-    local P=tabPanels[8]
+    local P=tabPanels[7]
     
     MkToggle(P,"HEADLESS",1,
         function()
@@ -2727,10 +2415,10 @@ do
 end
 
 -- ═══════════════════════════════════════
--- TAB 9: SPIN
+-- TAB 8: SPIN
 -- ═══════════════════════════════════════
 do
-    local P=tabPanels[9]
+    local P=tabPanels[8]
     
     local spinOn=false; local spinSpd=60; local spinAng=0
     local sAt,sAO,sBV,sCn
@@ -2781,10 +2469,10 @@ do
 end
 
 -- ═══════════════════════════════════════
--- TAB 10: SETTINGS
+-- TAB 9: SETTINGS
 -- ═══════════════════════════════════════
 do
-    local P=tabPanels[10]
+    local P=tabPanels[9]
     local tkCard=MkCard(P,52,1)
     MkLabel(tkCard,{text="TOGGLE UI KEYBIND",size=7,color=T.DIM,font=Bold,sz=UDim2.new(1,-28,0,10),pos=UDim2.new(0,14,0,7),z=14})
     local curName=SAVE.toggleKey or "Insert"
@@ -2853,10 +2541,10 @@ do
 end
 
 -- ═══════════════════════════════════════
--- TAB 11: CONFIGS
+-- TAB 10: CONFIGS
 -- ═══════════════════════════════════════
 do
-    local P=tabPanels[11]
+    local P=tabPanels[10]
     local function getSnap()
         return {kaRange=SAVE.kaRange,kaAPS=SAVE.kaAPS,hbSize=SAVE.hbSize,rpSpeed=SAVE.rpSpeed,
             friends=SAVE.friends,targets=SAVE.targets,
@@ -2913,10 +2601,10 @@ do
     end)
 end
 -- ═══════════════════════════════════════
--- TAB 12: ADVANCED COMBAT
+-- TAB 11: ADVANCED COMBAT
 -- ═══════════════════════════════════════
 do
-    local P=tabPanels[12]
+    local P=tabPanels[11]
     
     MkSep(P,"Auto Combo",1)
     
@@ -3085,10 +2773,10 @@ do
 end
 
 -- ═══════════════════════════════════════
--- TAB 13: COMBAT UTILS
+-- TAB 12: COMBAT UTILS
 -- ═══════════════════════════════════════
 do
-    local P=tabPanels[13]
+    local P=tabPanels[12]
     
     MkSep(P,"Combat Tools",1)
     
@@ -3210,10 +2898,10 @@ do
 end
 
 -- ═══════════════════════════════════════
--- TAB 14: ADVANTAGE
+-- TAB 13: ADVANTAGE
 -- ═══════════════════════════════════════
 do
-    local P=tabPanels[14]
+    local P=tabPanels[13]
     
     MkSep(P,"Invisibility",1)
     
